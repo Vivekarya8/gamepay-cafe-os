@@ -327,14 +327,97 @@ def purchase():
     return redirect("/dashboard")
 @app.post("/close-day")
 def close_day():
-    if not logged():return redirect("/")
-    c=db();d=str(date.today());bd=c.execute("SELECT * FROM business_days WHERE day=?",(d,)).fetchone()
-    if not bd:c.close();return "Day not open",400
-    cashsales=c.execute("SELECT COALESCE(SUM(amount),0)s FROM transactions WHERE day=? AND mode='Cash' AND type IN('Product','Gaming','Recovery') AND status='ACTIVE'",(d,)).fetchone()["s"]
-    cashexp=c.execute("SELECT COALESCE(SUM(amount),0)s FROM expenses WHERE day=? AND mode='Cash'",(d,)).fetchone()["s"];cashpur=c.execute("SELECT COALESCE(SUM(total),0)s FROM purchases WHERE day=? AND mode='Cash'",(d,)).fetchone()["s"]
-    expected=bd["opening_cash"]+cashsales-cashexp-cashpur;actual=float(request.form["actual"])
-    c.execute("UPDATE business_days SET closed=1,expected_cash=?,actual_cash=?,cash_diff=? WHERE day=?",(expected,actual,actual-expected,d));c.commit();c.close();audit("CLOSE DAY",f"Difference {actual-expected}");return redirect("/dashboard")
+    if not logged():
+        return redirect("/")
 
+    c = db()
+    d = str(date.today())
+
+    bd = c.execute(
+        "SELECT * FROM business_days WHERE day=?",
+        (d,)
+    ).fetchone()
+
+    if not bd:
+        c.close()
+        return "Day not open", 400
+
+    # CASH IN:
+    # Product sales + Gaming sales + Udhar recoveries received in Cash
+    cashsales = c.execute(
+        """
+        SELECT COALESCE(SUM(amount),0) AS s
+        FROM transactions
+        WHERE day=?
+          AND mode='Cash'
+          AND type IN ('Product','Gaming','Recovery')
+          AND status='ACTIVE'
+        """,
+        (d,)
+    ).fetchone()["s"]
+
+    # CASH OUT: Expenses
+    cashexp = c.execute(
+        """
+        SELECT COALESCE(SUM(amount),0) AS s
+        FROM expenses
+        WHERE day=? AND mode='Cash'
+        """,
+        (d,)
+    ).fetchone()["s"]
+
+    # CASH OUT: Stock purchases paid immediately in Cash
+    cashpur = c.execute(
+        """
+        SELECT COALESCE(SUM(total),0) AS s
+        FROM purchases
+        WHERE day=? AND mode='Cash'
+        """,
+        (d,)
+    ).fetchone()["s"]
+
+    # CASH OUT: Payments made to suppliers in Cash
+    cash_supplier_payments = c.execute(
+    """
+    SELECT COALESCE(SUM(amount),0) AS s
+    FROM supplier_payments
+    WHERE LEFT(ts,10)=? AND mode='Cash'
+    """,
+    (d,)
+).fetchone()["s"]
+
+    expected = (
+        bd["opening_cash"]
+        + cashsales
+        - cashexp
+        - cashpur
+        - cash_supplier_payments
+    )
+
+    actual = float(request.form["actual"])
+    difference = actual - expected
+
+    c.execute(
+        """
+        UPDATE business_days
+        SET closed=1,
+            expected_cash=?,
+            actual_cash=?,
+            cash_diff=?
+        WHERE day=?
+        """,
+        (expected, actual, difference, d)
+    )
+
+    c.commit()
+    c.close()
+
+    audit(
+        "CLOSE DAY",
+        f"Expected {expected}, Actual {actual}, Difference {difference}"
+    )
+
+    return redirect("/dashboard")
 @app.post("/session/start")
 def session_start():
     if not logged():return redirect("/")
