@@ -222,9 +222,13 @@
 <tr>
 
     <td>
-        <b>{{ s.supplier }}</b>
-    </td>
-
+    <b>{{ s.supplier }}</b>
+    <br>
+    <a class="btn"
+       href="{{ url_for('supplier_statement', name=s.supplier) }}">
+        📒 View Ledger
+    </a>
+</td>
     <td>
         ₹{{ "%.2f"|format(s.credit) }}
     </td>
