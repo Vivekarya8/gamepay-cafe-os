@@ -330,5 +330,8 @@ def export():
 def audit_page():
     if session.get("role")!="Owner":return "Owner only",403
     c=db();rows=c.execute("SELECT * FROM audit ORDER BY id DESC LIMIT 500").fetchall();c.close();return render_template("audit.html",rows=rows)
+# Initialize database when app starts on Render/Gunicorn
+init()
+
 if __name__=="__main__":
-    init();app.run(host="0.0.0.0",port=5000,debug=False)
+    app.run(host="0.0.0.0",port=5000,debug=False)
