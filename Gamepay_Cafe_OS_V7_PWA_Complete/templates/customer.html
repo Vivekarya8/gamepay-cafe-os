@@ -1,4 +1,247 @@
-<!doctype html><html><head><link rel="stylesheet" href="/static/style.css"><meta name="viewport" content="width=device-width"></head><body><header><b>Customer Statement</b><a href="/dashboard">Dashboard</a></header><main>
-<h1>{{customer.name}}</h1><div class="metrics"><div><small>Mobile</small><b>{{customer.mobile or "-"}}</b></div><div><small>Credit Limit</small><b>₹{{"%.2f"|format(customer.credit_limit)}}</b></div><div><small>Current Due</small><b>₹{{"%.2f"|format(customer.due)}}</b></div></div>
-<button onclick="window.print()">Print Statement</button>
-<table><tr><th>Date/Time</th><th>Type</th><th>Detail</th><th>Mode</th><th>Amount</th><th>Status</th></tr>{% for x in rows %}<tr><td>{{x.ts}}</td><td>{{x.type}}</td><td>{{x.detail}}</td><td>{{x.mode}}</td><td>₹{{"%.2f"|format(x.amount)}}</td><td>{{x.status}}</td></tr>{% endfor %}</table></main></body></html>
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>{{ customer.name }} - Udhar Ledger</title>
+    <link rel="stylesheet" href="/static/style.css">
+
+    <style>
+        .customer-header {
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:15px;
+            flex-wrap:wrap;
+            margin-bottom:20px;
+        }
+
+        .ledger-summary {
+            display:grid;
+            grid-template-columns:repeat(4,1fr);
+            gap:12px;
+            margin:20px 0;
+        }
+
+        .ledger-card {
+            background:#151f3f;
+            border:1px solid #2b3c70;
+            padding:18px;
+            border-radius:12px;
+        }
+
+        .ledger-card small {
+            display:block;
+            opacity:.75;
+            margin-bottom:8px;
+        }
+
+        .ledger-card b {
+            font-size:24px;
+        }
+
+        .ledger-table {
+            width:100%;
+            border-collapse:collapse;
+            margin-top:20px;
+        }
+
+        .ledger-table th,
+        .ledger-table td {
+            padding:12px;
+            border-bottom:1px solid #2b3555;
+            text-align:left;
+        }
+
+        .ledger-table th {
+            background:#172344;
+        }
+
+        .debit {
+            font-weight:bold;
+        }
+
+        .credit {
+            font-weight:bold;
+        }
+
+        .balance {
+            font-weight:bold;
+        }
+
+        .status-void {
+            opacity:.5;
+            text-decoration:line-through;
+        }
+
+        .print-btn {
+            padding:10px 18px;
+            cursor:pointer;
+        }
+
+        @media(max-width:800px) {
+            .ledger-summary {
+                grid-template-columns:1fr 1fr;
+            }
+
+            .table-wrap {
+                overflow-x:auto;
+            }
+        }
+
+        @media print {
+            header,
+            .print-btn {
+                display:none !important;
+            }
+
+            body {
+                background:white;
+                color:black;
+            }
+
+            .ledger-card {
+                border:1px solid #ccc;
+                background:white;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <b>💳 Customer Udhar Ledger</b>
+    <a href="/dashboard">← Dashboard</a>
+</header>
+
+<main>
+
+<div class="customer-header">
+
+    <div>
+        <h1>{{ customer.name }}</h1>
+        <div>
+            📱 {{ customer.mobile or "No mobile number" }}
+        </div>
+    </div>
+
+    <button class="print-btn" onclick="window.print()">
+        🖨 Print Statement
+    </button>
+
+</div>
+
+
+<div class="ledger-summary">
+
+    <div class="ledger-card">
+        <small>Credit Limit</small>
+        <b>₹{{ "%.2f"|format(customer.credit_limit or 0) }}</b>
+    </div>
+
+    <div class="ledger-card">
+        <small>Total Udhar</small>
+        <b>₹{{ "%.2f"|format(total_udhar) }}</b>
+    </div>
+
+    <div class="ledger-card">
+        <small>Total Recovery</small>
+        <b>₹{{ "%.2f"|format(total_recovery) }}</b>
+    </div>
+
+    <div class="ledger-card">
+        <small>🔴 Current Due</small>
+        <b>₹{{ "%.2f"|format(customer.due or 0) }}</b>
+    </div>
+
+</div>
+
+
+<h2>📒 Complete Transaction Ledger</h2>
+
+<div class="table-wrap">
+
+<table class="ledger-table">
+
+<thead>
+<tr>
+    <th>Date / Time</th>
+    <th>Type</th>
+    <th>Detail</th>
+    <th>Payment</th>
+    <th>Udhar +</th>
+    <th>Recovery -</th>
+    <th>Balance</th>
+    <th>Status</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for item in ledger %}
+
+{% set x = item.tx %}
+
+<tr class="{% if x.status == 'VOID' %}status-void{% endif %}">
+
+    <td>{{ x.ts }}</td>
+
+    <td>
+        {{ x.type }}
+    </td>
+
+    <td>
+        {{ x.detail }}
+    </td>
+
+    <td>
+        {{ x.mode }}
+    </td>
+
+    <td class="debit">
+        {% if item.debit > 0 %}
+            ₹{{ "%.2f"|format(item.debit) }}
+        {% else %}
+            -
+        {% endif %}
+    </td>
+
+    <td class="credit">
+        {% if item.credit > 0 %}
+            ₹{{ "%.2f"|format(item.credit) }}
+        {% else %}
+            -
+        {% endif %}
+    </td>
+
+    <td class="balance">
+        ₹{{ "%.2f"|format(item.balance) }}
+    </td>
+
+    <td>
+        {{ x.status }}
+    </td>
+
+</tr>
+
+{% else %}
+
+<tr>
+    <td colspan="8">
+        No transactions found for this customer.
+    </td>
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+</main>
+
+</body>
+</html>
