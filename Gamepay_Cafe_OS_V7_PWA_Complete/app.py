@@ -543,6 +543,103 @@ def supplier_payment():
     )
 
     return redirect("/dashboard")
+@app.get("/supplier/<name>")
+def supplier_statement(name):
+    if not logged():
+        return redirect("/")
+
+    c = db()
+
+    # Get all Supplier Udhar purchases
+    purchases = c.execute("""
+        SELECT id, ts, supplier, product, qty, rate, total, mode
+        FROM purchases
+        WHERE supplier=? AND mode='Supplier Udhar'
+        ORDER BY ts ASC, id ASC
+    """, (name,)).fetchall()
+
+    # Get all payments made to supplier
+    payments = c.execute("""
+        SELECT id, ts, supplier, amount, mode, note
+        FROM supplier_payments
+        WHERE supplier=?
+        ORDER BY ts ASC, id ASC
+    """, (name,)).fetchall()
+
+    if not purchases and not payments:
+        c.close()
+        return "Supplier not found", 404
+
+    ledger = []
+
+    total_credit = 0.0
+    total_paid = 0.0
+
+    # Purchases increase supplier outstanding
+    for p in purchases:
+        amount = float(p["total"] or 0)
+        total_credit += amount
+
+        ledger.append({
+            "ts": p["ts"],
+            "sort_id": int(p["id"]),
+            "kind": "PURCHASE",
+            "detail": f'{p["product"]} x{p["qty"]} @ ₹{float(p["rate"]):.2f}',
+            "mode": p["mode"],
+            "credit": amount,
+            "payment": 0.0
+        })
+
+    # Payments reduce supplier outstanding
+    for x in payments:
+        amount = float(x["amount"] or 0)
+        total_paid += amount
+
+        ledger.append({
+            "ts": x["ts"],
+            "sort_id": int(x["id"]),
+            "kind": "PAYMENT",
+            "detail": x["note"] or "Supplier payment",
+            "mode": x["mode"],
+            "credit": 0.0,
+            "payment": amount
+        })
+
+    # Merge chronologically
+    ledger.sort(
+        key=lambda x: (x["ts"] or "", x["sort_id"], x["kind"])
+    )
+
+    running_balance = 0.0
+
+    for item in ledger:
+        running_balance += item["credit"]
+        running_balance -= item["payment"]
+
+        # Safety against tiny floating point negatives
+        running_balance = max(0.0, running_balance)
+
+        item["balance"] = running_balance
+
+    current_outstanding = max(
+        0.0,
+        total_credit - total_paid
+    )
+
+    # Latest entries first for display
+    ledger.reverse()
+
+    c.close()
+
+    return render_template(
+        "supplier.html",
+        supplier=name,
+        ledger=ledger,
+        total_credit=total_credit,
+        total_paid=total_paid,
+        outstanding=current_outstanding
+    )
+
 @app.get("/excel")
 def excel_report():
     if session.get("role")!="Owner":return "Owner only",403
