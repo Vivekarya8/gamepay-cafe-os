@@ -215,49 +215,108 @@
 <h2>🚨 Smart Low Stock / Reorder Center</h2>
 
 <div class="panel">
+<div style="overflow-x:auto;">
+
 <table>
+
 <tr>
     <th>Product</th>
-    <th>Current Stock</th>
+    <th>Stock</th>
     <th>Status</th>
-    <th>Suggested Purchase</th>
+    <th>Suggested</th>
+    <th>⚡ Quick Restock</th>
 </tr>
 
 {% for p in products %}
-    {% if p.stock <= 10 %}
-    <tr>
-        <td><b>{{ p.name }}</b></td>
+{% if p.stock <= 10 %}
 
-        <td>
-            <b>{{ p.stock }}</b>
-        </td>
+<tr>
 
-        <td>
-            {% if p.stock <= 0 %}
-                🔴 OUT OF STOCK
-            {% elif p.stock <= 5 %}
-                🟠 CRITICAL
-            {% else %}
-                🟡 LOW STOCK
-            {% endif %}
-        </td>
+    <td>
+        <b>{{ p.name }}</b>
+    </td>
 
-        <td>
-            {% if p.stock <= 0 %}
-                Buy 20
-            {% elif p.stock <= 5 %}
-                Buy 15
-            {% else %}
-                Buy 10
-            {% endif %}
-        </td>
-    </tr>
-    {% endif %}
+    <td>
+        <b>{{ p.stock }}</b>
+    </td>
+
+    <td>
+        {% if p.stock <= 0 %}
+            🔴 OUT OF STOCK
+        {% elif p.stock <= 5 %}
+            🟠 CRITICAL
+        {% else %}
+            🟡 LOW STOCK
+        {% endif %}
+    </td>
+
+    <td>
+        {% if p.stock <= 0 %}
+            Buy 20
+        {% elif p.stock <= 5 %}
+            Buy 15
+        {% else %}
+            Buy 10
+        {% endif %}
+    </td>
+
+    <td>
+
+        <form action="/purchase" method="post" class="row">
+
+            <input
+                type="hidden"
+                name="product"
+                value="{{ p.id }}"
+            >
+
+            <input
+                name="supplier"
+                placeholder="Supplier"
+                required
+            >
+
+            <input
+                name="qty"
+                type="number"
+                min="1"
+                placeholder="Qty"
+                required
+            >
+
+            <input
+                name="rate"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="Rate ₹"
+                required
+            >
+
+            <select name="mode">
+                <option value="Cash">Cash</option>
+                <option value="UPI">UPI</option>
+                <option value="Supplier Udhar">Supplier Udhar</option>
+            </select>
+
+            <button type="submit">
+                🛒 Restock
+            </button>
+
+        </form>
+
+    </td>
+
+</tr>
+
+{% endif %}
 {% endfor %}
 
 </table>
+
 </div>
-                        {% if session.role=="Owner" %}<h2>📦 Physical Stock Adjustment</h2><form action="/stock-adjust" method="post" class="panel row"><select name="product">{% for p in products %}<option value="{{p.id}}">{{p.name}} (System {{p.stock}})</option>{% endfor %}</select><input name="physical" type="number" placeholder="Physical Qty"><select name="reason"><option>Counting Error</option><option>Damage</option><option>Missing</option><option>Free Given</option><option>Sold Without Entry</option><option>Other</option></select><button>Adjust with Audit</button></form>{% endif %}
+</div>
+            {% if session.role=="Owner" %}<h2>📦 Physical Stock Adjustment</h2><form action="/stock-adjust" method="post" class="panel row"><select name="product">{% for p in products %}<option value="{{p.id}}">{{p.name}} (System {{p.stock}})</option>{% endfor %}</select><input name="physical" type="number" placeholder="Physical Qty"><select name="reason"><option>Counting Error</option><option>Damage</option><option>Missing</option><option>Free Given</option><option>Sold Without Entry</option><option>Other</option></select><button>Adjust with Audit</button></form>{% endif %}
 <h2>📲 Udhar Reminder</h2><form action="/reminder" method="post" class="panel row"><select name="customer">{% for c in customers %}<option>{{c.name}}</option>{% endfor %}</select><button>Generate Reminder</button></form>
 <h2>📚 Stock Movement Audit</h2><table><tr><th>Time</th><th>Product</th><th>Type</th><th>Qty</th><th>Reason</th><th>User</th></tr>{% for m in movements %}<tr><td>{{m.ts}}</td><td>{{m.product}}</td><td>{{m.kind}}</td><td>{{m.qty}}</td><td>{{m.reason}}</td><td>{{m.user}}</td></tr>{% endfor %}</table>{% if bd and not bd.closed %}<h2>🔒 Day Closing</h2><form action="/close-day" method="post" class="panel row"><input name="actual" type="number" step=".01" placeholder="Actual Cash Drawer" required><button>Close Day</button></form>{% elif bd and bd.closed %}<div class="notice">🔒 DAY CLOSED · Expected ₹{{bd.expected_cash}} · Actual ₹{{bd.actual_cash}} · Difference ₹{{bd.cash_diff}}</div>{% endif %}
 </main><script>if("serviceWorker" in navigator){navigator.serviceWorker.register("/service-worker.js").catch(()=>{})}</script><script>
