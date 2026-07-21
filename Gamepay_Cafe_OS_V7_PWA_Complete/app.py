@@ -465,12 +465,84 @@ def customer_statement(name):
 
 @app.post("/supplier-payment")
 def supplier_payment():
-    if not logged():return redirect("/")
-    supplier=request.form["supplier"];amt=float(request.form["amount"]);mode=request.form["mode"]
-    c=db();c.execute("INSERT INTO supplier_payments(ts,supplier,amount,mode,note,app_user) VALUES(?,?,?,?,?,?)",
-    (datetime.now().isoformat(timespec="seconds"),supplier,amt,mode,request.form.get("note",""),session["name"]));c.commit();c.close()
-    audit("SUPPLIER PAYMENT",f"{supplier} {amt}");return redirect("/dashboard")
+    if not logged():
+        return redirect("/")
 
+    supplier = request.form.get("supplier", "").strip()
+    mode = request.form.get("mode", "").strip()
+    note = request.form.get("note", "").strip()
+
+    if not supplier:
+        return "Supplier required", 400
+
+    if mode not in ("Cash", "UPI"):
+        return "Invalid payment mode", 400
+
+    try:
+        amt = float(request.form.get("amount", "0"))
+    except (ValueError, TypeError):
+        return "Invalid payment amount", 400
+
+    if amt <= 0:
+        return "Payment amount must be greater than 0", 400
+
+    c = db()
+
+    # Calculate total Supplier Udhar purchases
+    credit_row = c.execute("""
+        SELECT COALESCE(SUM(total),0) AS credit
+        FROM purchases
+        WHERE supplier=? AND mode='Supplier Udhar'
+    """, (supplier,)).fetchone()
+
+    total_credit = float(credit_row["credit"] or 0)
+
+    # Calculate payments already made
+    paid_row = c.execute("""
+        SELECT COALESCE(SUM(amount),0) AS paid
+        FROM supplier_payments
+        WHERE supplier=?
+    """, (supplier,)).fetchone()
+
+    total_paid = float(paid_row["paid"] or 0)
+    outstanding = max(0, total_credit - total_paid)
+
+    # No outstanding balance
+    if outstanding <= 0:
+        c.close()
+        return "No outstanding balance for this supplier", 400
+
+    # Prevent overpayment
+    if amt > outstanding:
+        c.close()
+        return (
+            f"Payment exceeds supplier outstanding. "
+            f"Maximum allowed: ₹{outstanding:.2f}"
+        ), 400
+
+    # Save payment
+    c.execute("""
+        INSERT INTO supplier_payments
+        (ts,supplier,amount,mode,note,app_user)
+        VALUES(?,?,?,?,?,?)
+    """, (
+        datetime.now().isoformat(timespec="seconds"),
+        supplier,
+        amt,
+        mode,
+        note,
+        session["name"]
+    ))
+
+    c.commit()
+    c.close()
+
+    audit(
+        "SUPPLIER PAYMENT",
+        f"{supplier} ₹{amt:.2f} via {mode}"
+    )
+
+    return redirect("/dashboard")
 @app.get("/excel")
 def excel_report():
     if session.get("role")!="Owner":return "Owner only",403
