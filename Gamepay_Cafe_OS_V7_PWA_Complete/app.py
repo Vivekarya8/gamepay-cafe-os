@@ -205,31 +205,7 @@ def dashboard():
     daily=c.execute("""SELECT day,COALESCE(SUM(amount),0) sales FROM transactions
       WHERE status='ACTIVE' AND type IN('Product','Gaming') GROUP BY day ORDER BY day DESC LIMIT 30""").fetchall()
     c.close()
-   return render_template(
-    "dashboard.html",
-    total=total,
-    cost=cost,
-    exp=exp,
-    profit=total-cost-exp,
-    due=due,
-    products=products,
-    customers=customers,
-    stations=stations,
-    recent=recent,
-    bd=bd,
-    running=running,
-    movements=movements,
-    suppliers=suppliers,
-    supplier_paid=supplier_paid,
-    daily=daily,
-    opening_cash=opening_cash,
-    cash_sales=cash_sales,
-    cash_recovery=cash_recovery,
-    cash_expenses=cash_expenses,
-    cash_purchases=cash_purchases,
-    cash_supplier_payments=cash_supplier_payments,
-    expected_cash=expected_cash
-)
+       return render_template("dashboard.html",total=total,cost=cost,exp=exp,profit=total-cost-exp,due=due,products=products,customers=customers,stations=stations,recent=recent,bd=bd,running=running,movements=movements,suppliers=suppliers,supplier_paid=supplier_paid,daily=daily,opening_cash=opening_cash,cash_sales=cash_sales,cash_recovery=cash_recovery,cash_expenses=cash_expenses,cash_purchases=cash_purchases,cash_supplier_payments=cash_supplier_payments,expected_cash=expected_cash)
 @app.post("/open-day")
 def open_day():
     if not logged():return redirect("/")
