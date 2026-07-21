@@ -148,6 +148,54 @@ def dashboard():
         name ASC
 """).fetchall(); stations=c.execute("SELECT * FROM stations").fetchall(); recent=c.execute("SELECT * FROM transactions ORDER BY id DESC LIMIT 15").fetchall()
     bd=c.execute("SELECT * FROM business_days WHERE day=?",(d,)).fetchone()
+        # ===== EXPECTED CASH DRAWER BREAKDOWN =====
+
+    opening_cash = float(bd["opening_cash"] or 0) if bd else 0
+
+    cash_sales = c.execute("""
+        SELECT COALESCE(SUM(amount),0) AS s
+        FROM transactions
+        WHERE day=?
+          AND mode='Cash'
+          AND type IN ('Product','Gaming')
+          AND status='ACTIVE'
+    """,(d,)).fetchone()["s"]
+
+    cash_recovery = c.execute("""
+        SELECT COALESCE(SUM(amount),0) AS s
+        FROM transactions
+        WHERE day=?
+          AND mode='Cash'
+          AND type='Recovery'
+          AND status='ACTIVE'
+    """,(d,)).fetchone()["s"]
+
+    cash_expenses = c.execute("""
+        SELECT COALESCE(SUM(amount),0) AS s
+        FROM expenses
+        WHERE day=? AND mode='Cash'
+    """,(d,)).fetchone()["s"]
+
+    cash_purchases = c.execute("""
+        SELECT COALESCE(SUM(total),0) AS s
+        FROM purchases
+        WHERE day=? AND mode='Cash'
+    """,(d,)).fetchone()["s"]
+
+    cash_supplier_payments = c.execute("""
+        SELECT COALESCE(SUM(amount),0) AS s
+        FROM supplier_payments
+        WHERE LEFT(ts,10)=? AND mode='Cash'
+    """,(d,)).fetchone()["s"]
+
+    expected_cash = (
+        opening_cash
+        + cash_sales
+        + cash_recovery
+        - cash_expenses
+        - cash_purchases
+        - cash_supplier_payments
+    )
     running=c.execute("SELECT * FROM gaming_sessions WHERE status='RUNNING'").fetchall()
     movements=c.execute("SELECT * FROM inventory_movements ORDER BY id DESC LIMIT 20").fetchall()
     suppliers=c.execute("""SELECT supplier,
@@ -157,7 +205,31 @@ def dashboard():
     daily=c.execute("""SELECT day,COALESCE(SUM(amount),0) sales FROM transactions
       WHERE status='ACTIVE' AND type IN('Product','Gaming') GROUP BY day ORDER BY day DESC LIMIT 30""").fetchall()
     c.close()
-    return render_template("dashboard.html",total=total,cost=cost,exp=exp,profit=total-cost-exp,due=due,products=products,customers=customers,stations=stations,recent=recent,bd=bd,running=running,movements=movements,suppliers=suppliers,supplier_paid=supplier_paid,daily=daily)
+   return render_template(
+    "dashboard.html",
+    total=total,
+    cost=cost,
+    exp=exp,
+    profit=total-cost-exp,
+    due=due,
+    products=products,
+    customers=customers,
+    stations=stations,
+    recent=recent,
+    bd=bd,
+    running=running,
+    movements=movements,
+    suppliers=suppliers,
+    supplier_paid=supplier_paid,
+    daily=daily,
+    opening_cash=opening_cash,
+    cash_sales=cash_sales,
+    cash_recovery=cash_recovery,
+    cash_expenses=cash_expenses,
+    cash_purchases=cash_purchases,
+    cash_supplier_payments=cash_supplier_payments,
+    expected_cash=expected_cash
+)
 @app.post("/open-day")
 def open_day():
     if not logged():return redirect("/")
