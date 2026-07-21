@@ -1,0 +1,4 @@
+<!doctype html><html><head><link rel="stylesheet" href="/static/style.css"><meta name="viewport" content="width=device-width"></head><body><header><b>Customer Statement</b><a href="/dashboard">Dashboard</a></header><main>
+<h1>{{customer.name}}</h1><div class="metrics"><div><small>Mobile</small><b>{{customer.mobile or "-"}}</b></div><div><small>Credit Limit</small><b>₹{{"%.2f"|format(customer.credit_limit)}}</b></div><div><small>Current Due</small><b>₹{{"%.2f"|format(customer.due)}}</b></div></div>
+<button onclick="window.print()">Print Statement</button>
+<table><tr><th>Date/Time</th><th>Type</th><th>Detail</th><th>Mode</th><th>Amount</th><th>Status</th></tr>{% for x in rows %}<tr><td>{{x.ts}}</td><td>{{x.type}}</td><td>{{x.detail}}</td><td>{{x.mode}}</td><td>₹{{"%.2f"|format(x.amount)}}</td><td>{{x.status}}</td></tr>{% endfor %}</table></main></body></html>

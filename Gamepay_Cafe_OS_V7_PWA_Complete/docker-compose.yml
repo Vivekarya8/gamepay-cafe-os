@@ -1,0 +1,14 @@
+services:
+  gamepay:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      APP_ENV: production
+      GAMEPAY_SECRET: change-this-secret
+      GAMEPAY_DB: /data/gamepay.db
+    volumes:
+      - gamepay_data:/data
+    restart: unless-stopped
+volumes:
+  gamepay_data:

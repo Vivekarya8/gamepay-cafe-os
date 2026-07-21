@@ -1,0 +1,334 @@
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_file
+import sqlite3, os, hashlib, secrets, csv, io, shutil, hmac
+from urllib.parse import urlparse
+from pathlib import Path
+from openpyxl import Workbook
+from datetime import datetime, date
+
+app=Flask(__name__)
+app.secret_key=os.environ.get("GAMEPAY_SECRET", secrets.token_hex(32))
+DB=os.environ.get("GAMEPAY_DB","gamepay.db")
+DATABASE_URL=os.environ.get("DATABASE_URL","").strip()
+WHATSAPP_TOKEN=os.environ.get("WHATSAPP_TOKEN","").strip()
+WHATSAPP_PHONE_ID=os.environ.get("WHATSAPP_PHONE_ID","").strip()
+APP_ENV=os.environ.get("APP_ENV","development")
+
+STATIONS=[
+(1,"Pandora","time","30 Min:50,1 Hour:80"),
+(2,"Tekken Tag","coin","4 Coins:10,25 Coins:50"),
+(3,"Tekken Tag","coin","4 Coins:10,25 Coins:50"),
+(4,"Tekken Tag","coin","4 Coins:10,25 Coins:50"),
+(5,"PS3","time","30 Min:50,1 Hour:100"),
+(6,"PS5","time","30 Min:70,1 Hour:100")]
+PRODUCTS=[
+("Cold Drinks","Pepsi ₹15",15,9,35),("Cold Drinks","Dew ₹15",15,9,50),("Cold Drinks","Slice ₹15",15,9,40),
+("Cold Drinks","Kesar Badam ₹20",20,18,36),("Cold Drinks","Lahori Jeera ₹10",10,9,6),("Cold Drinks","Sting ₹20",20,18,25),
+("Cold Drinks","MC2 ₹20",20,18,10),("Cold Drinks","Campa Energy ₹20",20,18,20),("Cold Drinks","Pepsi ₹10",10,9,26),("Cold Drinks","7UP ₹10",10,9,26),
+("Snacks","Chips ₹5",5,4.5,10),("Snacks","Chips ₹10",10,9.5,40),("Snacks","Kurkure ₹5",5,4.5,20),("Snacks","Kurkure ₹10",10,9.5,15),
+("Snacks","Namkeen ₹5",5,4.5,18),("Snacks","Namkeen ₹10",10,9.5,50),("Snacks","Yes ₹5",5,4.5,40),
+("Cigarette","Advance",14,10.8,30),("Cigarette","Gold Flake",14,11.5,40),("Cigarette","Pan Define",18,16,10),("Cigarette","Mond",12,8,10),
+("Cigarette","Define",18,16,10),("Cigarette","Steller",18,16,10),("Cigarette","Indi Mint",13,11,14),("Cigarette","Total",10,9,7)]
+
+def db():
+    c=sqlite3.connect(DB); c.row_factory=sqlite3.Row; return c
+def h(p,salt="gamepay"):
+    return hashlib.pbkdf2_hmac("sha256",p.encode(),salt.encode(),200000).hex()
+def verify_pin(pin,stored):
+    # Supports old SHA256 hashes for migration and new PBKDF2 hashes.
+    return hmac.compare_digest(h(pin),stored) or hmac.compare_digest(hashlib.sha256(pin.encode()).hexdigest(),stored)
+def init():
+    c=db()
+    c.executescript("""CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY,name TEXT UNIQUE,role TEXT,pin_hash TEXT);
+    CREATE TABLE IF NOT EXISTS stations(id INTEGER PRIMARY KEY,name TEXT,type TEXT,rates TEXT);
+    CREATE TABLE IF NOT EXISTS products(id INTEGER PRIMARY KEY AUTOINCREMENT,category TEXT,name TEXT UNIQUE,sell REAL,cost REAL,stock INTEGER,low INTEGER DEFAULT 10);
+    CREATE TABLE IF NOT EXISTS customers(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT UNIQUE,mobile TEXT,credit_limit REAL DEFAULT 0,due REAL DEFAULT 0,approved INTEGER DEFAULT 1);
+    CREATE TABLE IF NOT EXISTS transactions(id INTEGER PRIMARY KEY AUTOINCREMENT,ts TEXT,day TEXT,type TEXT,detail TEXT,mode TEXT,customer TEXT,amount REAL,cost REAL,user TEXT,status TEXT DEFAULT 'ACTIVE');
+    CREATE TABLE IF NOT EXISTS expenses(id INTEGER PRIMARY KEY AUTOINCREMENT,ts TEXT,day TEXT,category TEXT,mode TEXT,amount REAL,note TEXT,user TEXT);
+    CREATE TABLE IF NOT EXISTS purchases(id INTEGER PRIMARY KEY AUTOINCREMENT,ts TEXT,day TEXT,supplier TEXT,product TEXT,qty INTEGER,rate REAL,total REAL,mode TEXT,user TEXT);
+    CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY AUTOINCREMENT,ts TEXT,user TEXT,action TEXT,detail TEXT);
+    CREATE TABLE IF NOT EXISTS business_days(day TEXT PRIMARY KEY,opening_cash REAL,closed INTEGER DEFAULT 0,expected_cash REAL,actual_cash REAL,cash_diff REAL);
+    CREATE TABLE IF NOT EXISTS gaming_sessions(id INTEGER PRIMARY KEY AUTOINCREMENT,station_id INTEGER,start_ts TEXT,end_ts TEXT,minutes INTEGER,price REAL,label TEXT,status TEXT DEFAULT 'RUNNING',user TEXT);
+    CREATE TABLE IF NOT EXISTS inventory_movements(id INTEGER PRIMARY KEY AUTOINCREMENT,ts TEXT,product TEXT,kind TEXT,qty REAL,reason TEXT,user TEXT);
+    CREATE TABLE IF NOT EXISTS reminders(id INTEGER PRIMARY KEY AUTOINCREMENT,ts TEXT,customer TEXT,due REAL,message TEXT,status TEXT DEFAULT 'GENERATED');
+    CREATE TABLE IF NOT EXISTS supplier_payments(id INTEGER PRIMARY KEY AUTOINCREMENT,ts TEXT,supplier TEXT,amount REAL,mode TEXT,note TEXT,user TEXT);
+    CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY,value TEXT);
+    """)
+    if not c.execute("SELECT 1 FROM users").fetchone():
+        c.executemany("INSERT INTO users(name,role,pin_hash) VALUES(?,?,?)",[("Owner","Owner",h("1234")),("Staff","Staff",h("1111"))])
+    for x in STATIONS:c.execute("INSERT OR IGNORE INTO stations VALUES(?,?,?,?)",x)
+    for x in PRODUCTS:c.execute("INSERT OR IGNORE INTO products(category,name,sell,cost,stock) VALUES(?,?,?,?,?)",x)
+    c.commit();c.close()
+def audit(action,detail):
+    c=db();c.execute("INSERT INTO audit(ts,user,action,detail) VALUES(?,?,?,?)",(datetime.now().isoformat(timespec="seconds"),session.get("name","System"),action,detail));c.commit();c.close()
+def logged(): return "name" in session
+def dayopen(c):
+    r=c.execute("SELECT * FROM business_days WHERE day=?",(str(date.today()),)).fetchone()
+    return r and not r["closed"]
+@app.route("/",methods=["GET","POST"])
+def login():
+    if request.method=="POST":
+        c=db();u=c.execute("SELECT * FROM users WHERE name=?",(request.form["name"],)).fetchone()
+        ok=bool(u and verify_pin(request.form["pin"],u["pin_hash"]))
+        if ok and len(u["pin_hash"])==64 and hmac.compare_digest(hashlib.sha256(request.form["pin"].encode()).hexdigest(),u["pin_hash"]):
+            c.execute("UPDATE users SET pin_hash=? WHERE id=?",(h(request.form["pin"]),u["id"]));c.commit()
+        c.close()
+        if ok: session.update(name=u["name"],role=u["role"]);audit("LOGIN","Successful login");return redirect(url_for("dashboard"))
+        return render_template("login.html",error="Wrong login/PIN")
+    return render_template("login.html")
+@app.route("/logout")
+def logout(): session.clear();return redirect(url_for("login"))
+@app.route("/dashboard")
+def dashboard():
+    if not logged():return redirect(url_for("login"))
+    c=db();d=str(date.today()); tx=c.execute("SELECT * FROM transactions WHERE day=? AND status='ACTIVE'",(d,)).fetchall()
+    sales=[x for x in tx if x["type"] in ("Gaming","Product")]
+    total=sum(x["amount"] for x in sales); cost=sum(x["cost"] for x in sales); exp=c.execute("SELECT COALESCE(SUM(amount),0) s FROM expenses WHERE day=?",(d,)).fetchone()["s"]
+    due=c.execute("SELECT COALESCE(SUM(due),0) s FROM customers").fetchone()["s"]; products=c.execute("SELECT * FROM products ORDER BY category,name").fetchall()
+    customers=c.execute("SELECT * FROM customers ORDER BY due DESC").fetchall(); stations=c.execute("SELECT * FROM stations").fetchall(); recent=c.execute("SELECT * FROM transactions ORDER BY id DESC LIMIT 15").fetchall()
+    bd=c.execute("SELECT * FROM business_days WHERE day=?",(d,)).fetchone()
+    running=c.execute("SELECT * FROM gaming_sessions WHERE status='RUNNING'").fetchall()
+    movements=c.execute("SELECT * FROM inventory_movements ORDER BY id DESC LIMIT 20").fetchall()
+    suppliers=c.execute("""SELECT supplier,
+      COALESCE(SUM(CASE WHEN mode='Supplier Udhar' THEN total ELSE 0 END),0) credit
+      FROM purchases GROUP BY supplier ORDER BY supplier""").fetchall()
+    supplier_paid={r["supplier"]:r["paid"] for r in c.execute("SELECT supplier,COALESCE(SUM(amount),0) paid FROM supplier_payments GROUP BY supplier").fetchall()}
+    daily=c.execute("""SELECT day,COALESCE(SUM(amount),0) sales FROM transactions
+      WHERE status='ACTIVE' AND type IN('Product','Gaming') GROUP BY day ORDER BY day DESC LIMIT 30""").fetchall()
+    c.close()
+    return render_template("dashboard.html",total=total,cost=cost,exp=exp,profit=total-cost-exp,due=due,products=products,customers=customers,stations=stations,recent=recent,bd=bd,running=running,movements=movements,suppliers=suppliers,supplier_paid=supplier_paid,daily=daily)
+@app.post("/open-day")
+def open_day():
+    if not logged():return redirect("/")
+    c=db();d=str(date.today());c.execute("INSERT OR REPLACE INTO business_days(day,opening_cash,closed) VALUES(?,?,0)",(d,float(request.form.get("opening",0))));c.commit();c.close();audit("OPEN DAY","Opening cash "+request.form.get("opening","0"));return redirect("/dashboard")
+@app.post("/sale")
+def sale():
+    if not logged():return redirect("/")
+    c=db()
+    if not dayopen(c):c.close();return "Open day first",400
+    p=c.execute("SELECT * FROM products WHERE id=?",(request.form["product"],)).fetchone();q=int(request.form["qty"]);mode=request.form["mode"];cust=request.form.get("customer","").strip()
+    if not p or q<1 or p["stock"]<q:c.close();return "Invalid stock",400
+    if mode=="Udhar":
+        cu=c.execute("SELECT * FROM customers WHERE name=? AND approved=1",(cust,)).fetchone()
+        if not cu:c.close();return "Approved customer required",400
+        if cu["credit_limit"] and cu["due"]+p["sell"]*q>cu["credit_limit"]:c.close();return "Credit limit exceeded",400
+        c.execute("UPDATE customers SET due=due+? WHERE name=?",(p["sell"]*q,cust))
+    c.execute("UPDATE products SET stock=stock-? WHERE id=?",(q,p["id"]))
+    c.execute("INSERT INTO inventory_movements(ts,product,kind,qty,reason,user) VALUES(?,?,?,?,?,?)",(datetime.now().isoformat(timespec="seconds"),p["name"],"SALE",-q,"Product sale",session["name"]))
+    c.execute("INSERT INTO transactions(ts,day,type,detail,mode,customer,amount,cost,user) VALUES(?,?,?,?,?,?,?,?,?)",(datetime.now().isoformat(timespec="seconds"),str(date.today()),"Product",f'{p["name"]} x{q}',mode,cust,p["sell"]*q,p["cost"]*q,session["name"]))
+    c.commit();c.close();audit("SALE",f'{p["name"]} x{q}');return redirect("/dashboard")
+@app.post("/gaming")
+def gaming():
+    if not logged():return redirect("/")
+    c=db()
+    if not dayopen(c):c.close();return "Open day first",400
+    sid=request.form["station"];package=request.form["package"];mode=request.form["mode"];cust=request.form.get("customer","").strip()
+    st=c.execute("SELECT * FROM stations WHERE id=?",(sid,)).fetchone(); price=float(package.split(":")[-1]); label=package.rsplit(":",1)[0]
+    if mode=="Udhar":
+        cu=c.execute("SELECT * FROM customers WHERE name=? AND approved=1",(cust,)).fetchone()
+        if not cu:c.close();return "Approved customer required",400
+        if cu["credit_limit"] and cu["due"]+price>cu["credit_limit"]:c.close();return "Credit limit exceeded",400
+        c.execute("UPDATE customers SET due=due+? WHERE name=?",(price,cust))
+    c.execute("INSERT INTO transactions(ts,day,type,detail,mode,customer,amount,cost,user) VALUES(?,?,?,?,?,?,?,?,?)",(datetime.now().isoformat(timespec="seconds"),str(date.today()),"Gaming",f'Station {sid} {st["name"]} {label}',mode,cust,price,0,session["name"]))
+    c.commit();c.close();audit("GAMING",f'Station {sid} {label}');return redirect("/dashboard")
+@app.post("/customer")
+def customer():
+    if session.get("role")!="Owner":return "Owner only",403
+    c=db();c.execute("INSERT OR REPLACE INTO customers(name,mobile,credit_limit,due,approved) VALUES(?,?,?,COALESCE((SELECT due FROM customers WHERE name=?),0),1)",(request.form["name"],request.form["mobile"],float(request.form.get("limit") or 0),request.form["name"]));c.commit();c.close();audit("CUSTOMER","Approved "+request.form["name"]);return redirect("/dashboard")
+@app.post("/recovery")
+def recovery():
+    if not logged():return redirect("/")
+    c=db();name=request.form["name"];amt=float(request.form["amount"]);mode=request.form["mode"];c.execute("UPDATE customers SET due=MAX(0,due-?) WHERE name=?",(amt,name));c.execute("INSERT INTO transactions(ts,day,type,detail,mode,customer,amount,cost,user) VALUES(?,?,?,?,?,?,?,?,?)",(datetime.now().isoformat(timespec="seconds"),str(date.today()),"Recovery","Udhar recovery",mode,name,amt,0,session["name"]));c.commit();c.close();audit("RECOVERY",f"{name} {amt}");return redirect("/dashboard")
+@app.post("/expense")
+def expense():
+    if not logged():return redirect("/")
+    amt=float(request.form["amount"])
+    if amt>=2000 and session.get("role")!="Owner":return "Owner approval required for ₹2000+",403
+    c=db();c.execute("INSERT INTO expenses(ts,day,category,mode,amount,note,user) VALUES(?,?,?,?,?,?,?)",(datetime.now().isoformat(timespec="seconds"),str(date.today()),request.form["category"],request.form["mode"],amt,request.form["note"],session["name"]));c.commit();c.close();audit("EXPENSE",f"{request.form['category']} {amt}");return redirect("/dashboard")
+@app.post("/purchase")
+def purchase():
+    if not logged():return redirect("/")
+    c=db();p=c.execute("SELECT * FROM products WHERE id=?",(request.form["product"],)).fetchone();q=int(request.form["qty"]);r=float(request.form["rate"]);newstock=p["stock"]+q;avg=(p["stock"]*p["cost"]+q*r)/newstock
+    c.execute("UPDATE products SET stock=?,cost=? WHERE id=?",(newstock,avg,p["id"]))
+    c.execute("INSERT INTO inventory_movements(ts,product,kind,qty,reason,user) VALUES(?,?,?,?,?,?)",(datetime.now().isoformat(timespec="seconds"),p["name"],"PURCHASE",q,"Supplier purchase",session["name"]))
+    c.execute("INSERT INTO purchases(ts,day,supplier,product,qty,rate,total,mode,user) VALUES(?,?,?,?,?,?,?,?,?)",(datetime.now().isoformat(timespec="seconds"),str(date.today()),request.form["supplier"],p["name"],q,r,q*r,request.form["mode"],session["name"]));c.commit();c.close();audit("PURCHASE",f'{p["name"]} x{q}');return redirect("/dashboard")
+@app.post("/close-day")
+def close_day():
+    if not logged():return redirect("/")
+    c=db();d=str(date.today());bd=c.execute("SELECT * FROM business_days WHERE day=?",(d,)).fetchone()
+    if not bd:c.close();return "Day not open",400
+    cashsales=c.execute("SELECT COALESCE(SUM(amount),0)s FROM transactions WHERE day=? AND mode='Cash' AND type IN('Product','Gaming','Recovery') AND status='ACTIVE'",(d,)).fetchone()["s"]
+    cashexp=c.execute("SELECT COALESCE(SUM(amount),0)s FROM expenses WHERE day=? AND mode='Cash'",(d,)).fetchone()["s"];cashpur=c.execute("SELECT COALESCE(SUM(total),0)s FROM purchases WHERE day=? AND mode='Cash'",(d,)).fetchone()["s"]
+    expected=bd["opening_cash"]+cashsales-cashexp-cashpur;actual=float(request.form["actual"])
+    c.execute("UPDATE business_days SET closed=1,expected_cash=?,actual_cash=?,cash_diff=? WHERE day=?",(expected,actual,actual-expected,d));c.commit();c.close();audit("CLOSE DAY",f"Difference {actual-expected}");return redirect("/dashboard")
+
+@app.post("/session/start")
+def session_start():
+    if not logged():return redirect("/")
+    c=db()
+    if not dayopen(c):c.close();return "Open day first",400
+    sid=int(request.form["station"]);minutes=int(request.form["minutes"]);price=float(request.form["price"]);label=request.form["label"]
+    running=c.execute("SELECT 1 FROM gaming_sessions WHERE station_id=? AND status='RUNNING'",(sid,)).fetchone()
+    if running:c.close();return "Station already running",400
+    c.execute("INSERT INTO gaming_sessions(station_id,start_ts,minutes,price,label,user) VALUES(?,?,?,?,?,?)",(sid,datetime.now().isoformat(timespec="seconds"),minutes,price,label,session["name"]));c.commit();c.close();audit("SESSION START",f"Station {sid} {label}");return redirect("/dashboard")
+@app.post("/session/stop")
+def session_stop():
+    if not logged():return redirect("/")
+    c=db();sid=int(request.form["station"]);gs=c.execute("SELECT * FROM gaming_sessions WHERE station_id=? AND status='RUNNING' ORDER BY id DESC LIMIT 1",(sid,)).fetchone()
+    if not gs:c.close();return "No running session",400
+    mode=request.form["mode"];cust=request.form.get("customer","").strip()
+    if mode=="Udhar":
+        cu=c.execute("SELECT * FROM customers WHERE name=? AND approved=1",(cust,)).fetchone()
+        if not cu:c.close();return "Approved customer required",400
+        if cu["credit_limit"] and cu["due"]+gs["price"]>cu["credit_limit"]:c.close();return "Credit limit exceeded",400
+        c.execute("UPDATE customers SET due=due+? WHERE name=?",(gs["price"],cust))
+    c.execute("UPDATE gaming_sessions SET end_ts=?,status='STOPPED' WHERE id=?",(datetime.now().isoformat(timespec="seconds"),gs["id"]))
+    st=c.execute("SELECT name FROM stations WHERE id=?",(sid,)).fetchone()
+    c.execute("INSERT INTO transactions(ts,day,type,detail,mode,customer,amount,cost,user) VALUES(?,?,?,?,?,?,?,?,?)",(datetime.now().isoformat(timespec="seconds"),str(date.today()),"Gaming",f'Station {sid} {st["name"]} {gs["label"]}',mode,cust,gs["price"],0,session["name"]))
+    c.commit();c.close();audit("SESSION STOP",f"Station {sid}, billed {gs['price']}");return redirect("/dashboard")
+@app.post("/void/<int:txid>")
+def void_tx(txid):
+    if session.get("role")!="Owner":return "Owner only",403
+    reason=request.form.get("reason","Owner void").strip()
+    c=db();x=c.execute("SELECT * FROM transactions WHERE id=? AND status='ACTIVE'",(txid,)).fetchone()
+    if not x:c.close();return "Transaction unavailable",404
+    c.execute("UPDATE transactions SET status='VOID' WHERE id=?",(txid,))
+    if x["mode"]=="Udhar" and x["customer"]:c.execute("UPDATE customers SET due=MAX(0,due-?) WHERE name=?",(x["amount"],x["customer"]))
+    if x["type"]=="Product":
+        import re
+        m=re.match(r"(.+) x(\\d+)$",x["detail"])
+        if m:
+            q=int(m.group(2));name=m.group(1);c.execute("UPDATE products SET stock=stock+? WHERE name=?",(q,name));c.execute("INSERT INTO inventory_movements(ts,product,kind,qty,reason,user) VALUES(?,?,?,?,?,?)",(datetime.now().isoformat(timespec="seconds"),name,"VOID_RETURN",q,reason,session["name"]))
+    c.commit();c.close();audit("VOID",f"Transaction {txid}: {reason}");return redirect("/dashboard")
+@app.post("/stock-adjust")
+def stock_adjust():
+    if session.get("role")!="Owner":return "Owner only",403
+    c=db();p=c.execute("SELECT * FROM products WHERE id=?",(request.form["product"],)).fetchone();physical=int(request.form["physical"]);diff=physical-p["stock"];reason=request.form["reason"]
+    c.execute("UPDATE products SET stock=? WHERE id=?",(physical,p["id"]));c.execute("INSERT INTO inventory_movements(ts,product,kind,qty,reason,user) VALUES(?,?,?,?,?,?)",(datetime.now().isoformat(timespec="seconds"),p["name"],"ADJUSTMENT",diff,reason,session["name"]));c.commit();c.close();audit("STOCK ADJUST",f'{p["name"]}: {diff}, {reason}');return redirect("/dashboard")
+@app.get("/receipt/<int:txid>")
+def receipt(txid):
+    if not logged():return redirect("/")
+    c=db();x=c.execute("SELECT * FROM transactions WHERE id=?",(txid,)).fetchone();c.close()
+    return render_template("receipt.html",x=x)
+@app.post("/reminder")
+def reminder():
+    if not logged():return redirect("/")
+    c=db();cu=c.execute("SELECT * FROM customers WHERE name=?",(request.form["customer"],)).fetchone()
+    if not cu:c.close();return "Customer not found",404
+    msg=f"Namaste {cu['name']} ji, Gamepay Cafe mein aapka current outstanding balance ₹{cu['due']:.2f} hai. Kripya pending amount clear kar dein. — Gamepay Cafe"
+    c.execute("INSERT INTO reminders(ts,customer,due,message) VALUES(?,?,?,?)",(datetime.now().isoformat(timespec="seconds"),cu["name"],cu["due"],msg));c.commit();c.close();audit("REMINDER",f"{cu['name']} due {cu['due']}");return render_template("reminder.html",message=msg,customer=cu)
+
+
+@app.get("/customer/<name>")
+def customer_statement(name):
+    if not logged():return redirect("/")
+    c=db();cu=c.execute("SELECT * FROM customers WHERE name=?",(name,)).fetchone()
+    rows=c.execute("SELECT * FROM transactions WHERE customer=? ORDER BY id DESC",(name,)).fetchall();c.close()
+    if not cu:return "Customer not found",404
+    return render_template("customer.html",customer=cu,rows=rows)
+
+@app.post("/supplier-payment")
+def supplier_payment():
+    if not logged():return redirect("/")
+    supplier=request.form["supplier"];amt=float(request.form["amount"]);mode=request.form["mode"]
+    c=db();c.execute("INSERT INTO supplier_payments(ts,supplier,amount,mode,note,user) VALUES(?,?,?,?,?,?)",
+    (datetime.now().isoformat(timespec="seconds"),supplier,amt,mode,request.form.get("note",""),session["name"]));c.commit();c.close()
+    audit("SUPPLIER PAYMENT",f"{supplier} {amt}");return redirect("/dashboard")
+
+@app.get("/excel")
+def excel_report():
+    if session.get("role")!="Owner":return "Owner only",403
+    c=db();wb=Workbook();ws=wb.active;ws.title="Transactions"
+    tables=[
+      ("Transactions","SELECT * FROM transactions ORDER BY id DESC"),
+      ("Products","SELECT * FROM products ORDER BY category,name"),
+      ("Customers","SELECT * FROM customers ORDER BY name"),
+      ("Purchases","SELECT * FROM purchases ORDER BY id DESC"),
+      ("Expenses","SELECT * FROM expenses ORDER BY id DESC"),
+      ("Inventory Movements","SELECT * FROM inventory_movements ORDER BY id DESC"),
+      ("Daily Closings","SELECT * FROM business_days ORDER BY day DESC"),
+      ("Audit","SELECT * FROM audit ORDER BY id DESC")]
+    for idx,(name,q) in enumerate(tables):
+        sh=ws if idx==0 else wb.create_sheet(name[:31]);rows=c.execute(q).fetchall()
+        if rows:
+            sh.append(list(rows[0].keys()))
+            for r in rows: sh.append(list(tuple(r)))
+    c.close();bio=io.BytesIO();wb.save(bio);bio.seek(0)
+    return send_file(bio,as_attachment=True,download_name=f"Gamepay_Cafe_Report_{date.today()}.xlsx",
+                     mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+@app.get("/backup-db")
+def backup_db():
+    if session.get("role")!="Owner":return "Owner only",403
+    c=db();c.commit();c.close()
+    return send_file(DB,as_attachment=True,download_name=f"gamepay_backup_{date.today()}.db")
+
+@app.post("/change-pin")
+def change_pin():
+    if not logged():return redirect("/")
+    old=request.form["old"];new=request.form["new"]
+    if len(new)<4:return "New PIN must be at least 4 characters",400
+    c=db();u=c.execute("SELECT * FROM users WHERE name=?",(session["name"],)).fetchone()
+    if not u or not verify_pin(old,u["pin_hash"]):c.close();return "Old PIN incorrect",403
+    c.execute("UPDATE users SET pin_hash=? WHERE id=?",(h(new),u["id"]));c.commit();c.close();audit("PIN CHANGE","PIN changed");return redirect("/dashboard")
+
+
+@app.get("/api/health")
+def api_health():
+    return jsonify({"ok":True,"app":"Gamepay Cafe OS","version":"V7","environment":APP_ENV,
+                    "database":"configured" if DATABASE_URL else "local-sqlite",
+                    "whatsapp":"configured" if WHATSAPP_TOKEN and WHATSAPP_PHONE_ID else "not-configured"})
+
+@app.get("/api/dashboard")
+def api_dashboard():
+    if not logged():return jsonify({"error":"unauthorized"}),401
+    c=db();d=str(date.today())
+    sales=c.execute("SELECT COALESCE(SUM(amount),0)s FROM transactions WHERE day=? AND status='ACTIVE' AND type IN('Product','Gaming')",(d,)).fetchone()["s"]
+    due=c.execute("SELECT COALESCE(SUM(due),0)s FROM customers").fetchone()["s"]
+    low=c.execute("SELECT COUNT(*) c FROM products WHERE stock<=low").fetchone()["c"]
+    running=c.execute("SELECT COUNT(*) c FROM gaming_sessions WHERE status='RUNNING'").fetchone()["c"];c.close()
+    return jsonify({"date":d,"sales":sales,"outstanding":due,"low_stock":low,"running_sessions":running})
+
+@app.get("/manifest.json")
+def manifest():
+    return jsonify({
+      "name":"Gamepay Cafe OS","short_name":"Gamepay","id":"/dashboard",
+      "start_url":"/dashboard","scope":"/","display":"standalone",
+      "orientation":"any","background_color":"#09101f","theme_color":"#111a35",
+      "description":"Gaming cafe billing, inventory, udhar and business control system.",
+      "icons":[
+        {"src":"/static/icons/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
+        {"src":"/static/icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+      ]
+    })
+
+@app.get("/service-worker.js")
+def service_worker():
+    js = """const CACHE='gamepay-v7-pwa-v2';
+const SHELL=['/static/style.css','/static/icons/icon-192.png','/static/icons/icon-512.png'];
+self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)))});
+self.addEventListener('activate',e=>e.waitUntil(Promise.all([self.clients.claim(),caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))])));
+self.addEventListener('fetch',e=>{
+ if(e.request.method!=='GET') return;
+ e.respondWith(fetch(e.request).then(r=>{let copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));return r})
+ .catch(()=>caches.match(e.request).then(r=>r||new Response('<h2>Gamepay Cafe is offline</h2><p>Reconnect to use live billing and synced data.</p>',{headers:{'Content-Type':'text/html'}}))));
+});"""
+    return app.response_class(js,mimetype="application/javascript",headers={"Cache-Control":"no-cache"})
+
+@app.get("/cloud-status")
+def cloud_status():
+    if session.get("role")!="Owner":return "Owner only",403
+    return render_template("cloud.html",db_mode=("Cloud URL configured" if DATABASE_URL else "Local SQLite"),
+      wa=("Configured" if WHATSAPP_TOKEN and WHATSAPP_PHONE_ID else "Not configured"),
+      env=APP_ENV)
+
+@app.get("/export")
+def export():
+    if session.get("role")!="Owner":return "Owner only",403
+    c=db();rows=c.execute("SELECT * FROM transactions ORDER BY id DESC").fetchall();c.close();s=io.StringIO();w=csv.writer(s);w.writerow(rows[0].keys() if rows else ["No data"]);[w.writerow(tuple(r)) for r in rows]
+    b=io.BytesIO(s.getvalue().encode());return send_file(b,mimetype="text/csv",as_attachment=True,download_name="gamepay_transactions.csv")
+@app.get("/audit")
+def audit_page():
+    if session.get("role")!="Owner":return "Owner only",403
+    c=db();rows=c.execute("SELECT * FROM audit ORDER BY id DESC LIMIT 500").fetchall();c.close();return render_template("audit.html",rows=rows)
+if __name__=="__main__":
+    init();app.run(host="0.0.0.0",port=5000,debug=False)
