@@ -61,4 +61,31 @@ window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPro
 installBtn?.addEventListener("click",async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;installBtn.style.display="none"});
 function network(){net.textContent=navigator.onLine?"🟢 Online":"🔴 Offline";} addEventListener("online",network);addEventListener("offline",network);network();
 if("serviceWorker" in navigator){navigator.serviceWorker.register("/service-worker.js").then(reg=>{reg.addEventListener("updatefound",()=>{let w=reg.installing;w.addEventListener("statechange",()=>{if(w.state==="installed"&&navigator.serviceWorker.controller){if(confirm("Gamepay Cafe update available. Reload now?"))location.reload()}})})}).catch(()=>{})}
-</script></body></html>
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  document.querySelectorAll('form').forEach(function(form) {
+    const mode = form.querySelector('select[name="mode"]');
+    const customer = form.querySelector('select[name="customer"]');
+
+    if (!mode || !customer) return;
+
+    function updateCustomerField() {
+      if (mode.value === "Udhar") {
+        customer.style.display = "";
+        customer.required = true;
+      } else {
+        customer.style.display = "none";
+        customer.required = false;
+        customer.value = "";
+      }
+    }
+
+    mode.addEventListener("change", updateCustomerField);
+    updateCustomerField();
+  });
+
+});
+</script>
+</body></html>
