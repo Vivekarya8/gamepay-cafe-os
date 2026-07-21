@@ -38,8 +38,11 @@ class PGCompat:
         sql=sql.replace("?", "%s")
         return self.conn.execute(sql, params)
     def executemany(self, sql, seq):
-        sql=sql.replace("?", "%s")
-        return self.conn.executemany(sql, seq)
+    sql = sql.replace("?", "%s")
+    with self.conn.cursor() as cur:
+        cur.executemany(sql, seq)
+    return None
+    
     def commit(self): return self.conn.commit()
     def close(self): return self.conn.close()
 
