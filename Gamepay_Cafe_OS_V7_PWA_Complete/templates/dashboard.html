@@ -7,11 +7,32 @@
 {% for s in stations %}{% set ns=namespace(run=None) %}{% for g in running %}{% if g.station_id==s.id %}{% set ns.run=g %}{% endif %}{% endfor %}
 <div class="panel"><b>Station {{s.id}} — {{s.name}}</b>
 {% if ns.run %}<div class="timer" data-start="{{ns.run.start_ts}}" data-min="{{ns.run.minutes}}">Calculating...</div><small>{{ns.run.label}} · ₹{{ns.run.price}}</small>
-<form action="/session/stop" method="post"><input type="hidden" name="station" value="{{s.id}}"><select name="mode"><option>Cash</option><option>UPI</option><option>Udhar</option></select><input name="customer" placeholder="Customer if Udhar"><button>STOP & BILL</button></form>
+<form action="/session/stop" method="post"><input type="hidden" name="station" value="{{s.id}}"><select name="mode"><option>Cash</option><option>UPI</option><option>Udhar</option></select><select name="customer">
+    <option value="">Customer if Udhar</option>
+    {% for c in customers %}
+        {% if c.approved %}
+        <option value="{{c.name}}">{{c.name}} — Due ₹{{"%.2f"|format(c.due)}}</option>
+        {% endif %}
+    {% endfor %}
+</select><button>STOP & BILL</button></form>
 {% elif s.type=="time" %}<form action="/session/start" method="post">{% for r in s.rates.split(",") %}{% set parts=r.split(":") %}<button name="label" value="{{parts[0]}}" onclick="this.form.minutes.value='{{30 if '30 Min' in parts[0] else 60}}';this.form.price.value='{{parts[1]}}'">Start {{r}}</button>{% endfor %}<input type="hidden" name="station" value="{{s.id}}"><input type="hidden" name="minutes"><input type="hidden" name="price"></form>
 {% else %}<small>Coin based — use Quick Billing below</small>{% endif %}</div>{% endfor %}</div>
-<script>setInterval(()=>document.querySelectorAll(".timer").forEach(e=>{let start=new Date(e.dataset.start).getTime(),left=+e.dataset.min*60-Math.floor((Date.now()-start)/1000);e.textContent=left>0?Math.floor(left/60)+":"+String(left%60).padStart(2,"0"):"TIME OVER"}),1000)</script><h2>🎮 Gaming Quick Billing</h2><div class="cards">{% for s in stations %}<form action="/gaming" method="post" class="panel"><b>Station {{s.id}} — {{s.name}}</b><input type="hidden" name="station" value="{{s.id}}"><select name="package">{% for r in s.rates.split(",") %}<option>{{r}}</option>{% endfor %}</select><select name="mode"><option>Cash</option><option>UPI</option><option>Udhar</option></select><input name="customer" placeholder="Customer if Udhar"><button>Bill Gaming</button></form>{% endfor %}</div>
-<h2>🧾 Product POS</h2><form action="/sale" method="post" class="panel row"><select name="product">{% for p in products %}<option value="{{p.id}}">{{p.name}} · ₹{{p.sell}} · Stock {{p.stock}}</option>{% endfor %}</select><input name="qty" type="number" min="1" value="1"><select name="mode"><option>Cash</option><option>UPI</option><option>Udhar</option></select><input name="customer" placeholder="Customer if Udhar"><button>Complete Sale</button></form>
+<script>setInterval(()=>document.querySelectorAll(".timer").forEach(e=>{let start=new Date(e.dataset.start).getTime(),left=+e.dataset.min*60-Math.floor((Date.now()-start)/1000);e.textContent=left>0?Math.floor(left/60)+":"+String(left%60).padStart(2,"0"):"TIME OVER"}),1000)</script><h2>🎮 Gaming Quick Billing</h2><div class="cards">{% for s in stations %}<form action="/gaming" method="post" class="panel"><b>Station {{s.id}} — {{s.name}}</b><input type="hidden" name="station" value="{{s.id}}"><select name="package">{% for r in s.rates.split(",") %}<option>{{r}}</option>{% endfor %}</select><select name="mode"><option>Cash</option><option>UPI</option><option>Udhar</option></select><select name="customer">
+    <option value="">Customer if Udhar</option>
+    {% for c in customers %}
+        {% if c.approved %}
+        <option value="{{c.name}}">{{c.name}} — Due ₹{{"%.2f"|format(c.due)}}</option>
+        {% endif %}
+    {% endfor %}
+</select><button>Bill Gaming</button></form>{% endfor %}</div>
+<h2>🧾 Product POS</h2><form action="/sale" method="post" class="panel row"><select name="product">{% for p in products %}<option value="{{p.id}}">{{p.name}} · ₹{{p.sell}} · Stock {{p.stock}}</option>{% endfor %}</select><input name="qty" type="number" min="1" value="1"><select name="mode"><option>Cash</option><option>UPI</option><option>Udhar</option></select><select name="customer">
+    <option value="">Customer if Udhar</option>
+    {% for c in customers %}
+        {% if c.approved %}
+        <option value="{{c.name}}">{{c.name}} — Due ₹{{"%.2f"|format(c.due)}}</option>
+        {% endif %}
+    {% endfor %}
+</select><button>Complete Sale</button></form>
 <div class="twocol"><section><h2>👥 Udhar</h2>{% if session.role=="Owner" %}<form action="/customer" method="post" class="panel"><input name="name" placeholder="Name" required><input name="mobile" placeholder="Mobile"><input name="limit" type="number" placeholder="Credit Limit"><button>Approve Customer</button></form>{% endif %}<form action="/recovery" method="post" class="panel"><select name="name">{% for c in customers %}<option>{{c.name}}</option>{% endfor %}</select><input name="amount" type="number" step=".01" placeholder="Recovery" required><select name="mode"><option>Cash</option><option>UPI</option></select><button>Receive</button></form><table><tr><th>Customer</th><th>Due</th></tr>{% for c in customers %}<tr><td><a href="/customer/{{c.name}}">{{c.name}}</a></td><td>₹{{"%.2f"|format(c.due)}}</td></tr>{% endfor %}</table></section>
 <section><h2>🛒 Purchase / Expense</h2><form action="/purchase" method="post" class="panel"><input name="supplier" placeholder="Supplier"><select name="product">{% for p in products %}<option value="{{p.id}}">{{p.name}}</option>{% endfor %}</select><input name="qty" type="number" placeholder="Qty"><input name="rate" type="number" step=".01" placeholder="Purchase Rate"><select name="mode"><option>Cash</option><option>UPI</option><option>Supplier Udhar</option></select><button>Add Purchase</button></form><form action="/expense" method="post" class="panel"><input name="category" placeholder="Expense Category"><input name="amount" type="number" step=".01" placeholder="Amount"><select name="mode"><option>Cash</option><option>UPI</option></select><input name="note" placeholder="Reason"><button>Add Expense</button></form></section></div>
 
