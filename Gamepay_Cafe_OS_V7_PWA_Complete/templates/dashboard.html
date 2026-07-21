@@ -56,16 +56,21 @@
 </select><button>Complete Sale</button></form>
 <div class="twocol"><section><h2>👥 Udhar</h2>{% if session.role=="Owner" %}<form action="/customer" method="post" class="panel"><input name="name" placeholder="Name" required><input name="mobile" placeholder="Mobile"><input name="limit" type="number" placeholder="Credit Limit"><button>Approve Customer</button></form>{% endif %}<form action="/recovery" method="post" class="panel"><select name="name">{% for c in customers %}<option>{{c.name}}</option>{% endfor %}</select><input name="amount" type="number" step=".01" placeholder="Recovery" required><select name="mode"><option>Cash</option><option>UPI</option></select><button>Receive</button></form><table><tr><th>Customer</th><th>Due</th></tr>{% for c in customers %}<tr><td><a href="/customer/{{c.name}}">{{c.name}}</a></td><td>₹{{"%.2f"|format(c.due)}}</td></tr>{% endfor %}</table></section>
 <section><h2>🛒 Purchase / Expense</h2><form action="/purchase" method="post" class="panel"><input name="supplier" placeholder="Supplier"><select name="product">{% for p in products %}<option value="{{p.id}}">{{p.name}}</option>{% endfor %}</select><input name="qty" type="number" placeholder="Qty"><input name="rate" type="number" step=".01" placeholder="Purchase Rate"><select name="mode"><option>Cash</option><option>UPI</option><option>Supplier Udhar</option></select><button>Add Purchase</button></form><form action="/expense" method="post" class="panel"><input name="category" placeholder="Expense Category"><input name="amount" type="number" step=".01" placeholder="Amount"><select name="mode"><option>Cash</option><option>UPI</option></select><input name="note" placeholder="Reason"><button>Add Expense</button></form></section></div>
-<h2>📲 Pending Udhar Reminder Center</h2>
+<h2>🚨 Smart Udhar Priority Center</h2>
 
 <div class="panel">
 
+<div style="overflow-x:auto;">
 <table>
+
 <tr>
+    <th>Priority</th>
     <th>Customer</th>
     <th>Mobile</th>
     <th>Current Due</th>
     <th>Credit Limit</th>
+    <th>Available Credit</th>
+    <th>Limit Used</th>
     <th>Actions</th>
 </tr>
 
@@ -73,7 +78,32 @@
 
 {% if c.due > 0 %}
 
+{% set limit = c.credit_limit or 0 %}
+{% set due = c.due or 0 %}
+
+{% if limit > 0 %}
+    {% set available = limit - due %}
+    {% set usage = (due / limit * 100) %}
+{% else %}
+    {% set available = 0 %}
+    {% set usage = 0 %}
+{% endif %}
+
 <tr>
+
+<td>
+
+{% if limit > 0 and usage >= 80 %}
+    <b>🔴 HIGH</b>
+
+{% elif limit > 0 and usage >= 50 %}
+    <b>🟠 MEDIUM</b>
+
+{% else %}
+    <b>🟢 LOW</b>
+{% endif %}
+
+</td>
 
 <td>
     <b>{{ c.name }}</b>
@@ -84,11 +114,51 @@
 </td>
 
 <td>
-    <b>₹{{ "%.2f"|format(c.due) }}</b>
+    <b>₹{{ "%.2f"|format(due) }}</b>
 </td>
 
 <td>
-    ₹{{ "%.2f"|format(c.credit_limit or 0) }}
+
+{% if limit > 0 %}
+    ₹{{ "%.2f"|format(limit) }}
+{% else %}
+    No Limit
+{% endif %}
+
+</td>
+
+<td>
+
+{% if limit > 0 %}
+
+    {% if available > 0 %}
+        ₹{{ "%.2f"|format(available) }}
+    {% else %}
+        ₹0.00 ⚠️
+    {% endif %}
+
+{% else %}
+    Unlimited
+{% endif %}
+
+</td>
+
+<td>
+
+{% if limit > 0 %}
+
+    <b>{{ "%.0f"|format(usage) }}%</b>
+
+    {% if usage >= 100 %}
+        <br>⛔ LIMIT REACHED
+    {% elif usage >= 80 %}
+        <br>⚠️ Near Limit
+    {% endif %}
+
+{% else %}
+    -
+{% endif %}
+
 </td>
 
 <td>
@@ -117,17 +187,17 @@
 {% else %}
 
 <tr>
-<td colspan="5">
-    No customers found.
-</td>
+    <td colspan="8">
+        No customers found.
+    </td>
 </tr>
 
 {% endfor %}
 
 </table>
-
 </div>
-<h2>📊 30-Day Sales Analytics</h2>
+
+</div><h2>📊 30-Day Sales Analytics</h2>
 <div class="panel"><div id="bars">{% for d in daily|reverse %}<div class="barrow"><span>{{d.day}}</span><div class="bar" data-v="{{d.sales}}"></div><b>₹{{"%.0f"|format(d.sales)}}</b></div>{% endfor %}</div></div>
 <script>let bs=[...document.querySelectorAll(".bar")],mx=Math.max(1,...bs.map(x=>+x.dataset.v));bs.forEach(x=>x.style.width=(+x.dataset.v/mx*100)+"%")</script>
 
