@@ -8,28 +8,49 @@
 <div class="panel"><b>Station {{s.id}} — {{s.name}}</b>
 {% if ns.run %}<div class="timer" data-start="{{ns.run.start_ts}}" data-min="{{ns.run.minutes}}">Calculating...</div><small>{{ns.run.label}} · ₹{{ns.run.price}}</small>
 <form action="/session/stop" method="post"><input type="hidden" name="station" value="{{s.id}}"><select name="mode"><option>Cash</option><option>UPI</option><option>Udhar</option></select><select name="customer">
-    <option value="">Customer if Udhar</option>
+    <option value="">Select Udhar Customer</option>
+
     {% for c in customers %}
         {% if c.approved %}
-        <option value="{{c.name}}">{{c.name}} — Due ₹{{"%.2f"|format(c.due)}}</option>
+
+        {% set available = c.credit_limit - c.due %}
+
+        <option value="{{c.name}}">
+            {{c.name}} | Due ₹{{"%.2f"|format(c.due)}} | Limit ₹{{"%.2f"|format(c.credit_limit)}} | Available ₹{{"%.2f"|format(available)}}
+        </option>
+
         {% endif %}
     {% endfor %}
 </select><button>STOP & BILL</button></form>
 {% elif s.type=="time" %}<form action="/session/start" method="post">{% for r in s.rates.split(",") %}{% set parts=r.split(":") %}<button name="label" value="{{parts[0]}}" onclick="this.form.minutes.value='{{30 if '30 Min' in parts[0] else 60}}';this.form.price.value='{{parts[1]}}'">Start {{r}}</button>{% endfor %}<input type="hidden" name="station" value="{{s.id}}"><input type="hidden" name="minutes"><input type="hidden" name="price"></form>
 {% else %}<small>Coin based — use Quick Billing below</small>{% endif %}</div>{% endfor %}</div>
 <script>setInterval(()=>document.querySelectorAll(".timer").forEach(e=>{let start=new Date(e.dataset.start).getTime(),left=+e.dataset.min*60-Math.floor((Date.now()-start)/1000);e.textContent=left>0?Math.floor(left/60)+":"+String(left%60).padStart(2,"0"):"TIME OVER"}),1000)</script><h2>🎮 Gaming Quick Billing</h2><div class="cards">{% for s in stations %}<form action="/gaming" method="post" class="panel"><b>Station {{s.id}} — {{s.name}}</b><input type="hidden" name="station" value="{{s.id}}"><select name="package">{% for r in s.rates.split(",") %}<option>{{r}}</option>{% endfor %}</select><select name="mode"><option>Cash</option><option>UPI</option><option>Udhar</option></select><select name="customer">
-    <option value="">Customer if Udhar</option>
+    <option value="">Select Udhar Customer</option>
+
     {% for c in customers %}
         {% if c.approved %}
-        <option value="{{c.name}}">{{c.name}} — Due ₹{{"%.2f"|format(c.due)}}</option>
+
+        {% set available = c.credit_limit - c.due %}
+
+        <option value="{{c.name}}">
+            {{c.name}} | Due ₹{{"%.2f"|format(c.due)}} | Limit ₹{{"%.2f"|format(c.credit_limit)}} | Available ₹{{"%.2f"|format(available)}}
+        </option>
+
         {% endif %}
     {% endfor %}
 </select><button>Bill Gaming</button></form>{% endfor %}</div>
 <h2>🧾 Product POS</h2><form action="/sale" method="post" class="panel row"><select name="product">{% for p in products %}<option value="{{p.id}}">{{p.name}} · ₹{{p.sell}} · Stock {{p.stock}}</option>{% endfor %}</select><input name="qty" type="number" min="1" value="1"><select name="mode"><option>Cash</option><option>UPI</option><option>Udhar</option></select><select name="customer">
-    <option value="">Customer if Udhar</option>
+    <option value="">Select Udhar Customer</option>
+
     {% for c in customers %}
         {% if c.approved %}
-        <option value="{{c.name}}">{{c.name}} — Due ₹{{"%.2f"|format(c.due)}}</option>
+
+        {% set available = c.credit_limit - c.due %}
+
+        <option value="{{c.name}}">
+            {{c.name}} | Due ₹{{"%.2f"|format(c.due)}} | Limit ₹{{"%.2f"|format(c.credit_limit)}} | Available ₹{{"%.2f"|format(available)}}
+        </option>
+
         {% endif %}
     {% endfor %}
 </select><button>Complete Sale</button></form>
