@@ -33,21 +33,23 @@ PRODUCTS=[
 
 class PGCompat:
     def __init__(self, conn):
-        self.conn=conn
+        self.conn = conn
+
     def execute(self, sql, params=()):
-        sql=sql.replace("?", "%s")
+        sql = sql.replace("?", "%s")
         return self.conn.execute(sql, params)
+
     def executemany(self, sql, seq):
-        sql =  sql.replace("?", "%s")
+        sql = sql.replace("?", "%s")
         with self.conn.cursor() as cur:
             cur.executemany(sql, seq)
         return None
 
-def commit(self):
-    return self.conn.commit()
+    def commit(self):
+        return self.conn.commit()
 
-def close(self):
-    return self.conn.close()
+    def close(self):
+        return self.conn.close()
 
 def db():
     if DATABASE_URL:
