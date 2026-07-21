@@ -277,11 +277,74 @@ def reminder():
 
 @app.get("/customer/<name>")
 def customer_statement(name):
-    if not logged():return redirect("/")
-    c=db();cu=c.execute("SELECT * FROM customers WHERE name=?",(name,)).fetchone()
-    rows=c.execute("SELECT * FROM transactions WHERE customer=? ORDER BY id DESC",(name,)).fetchall();c.close()
-    if not cu:return "Customer not found",404
-    return render_template("customer.html",customer=cu,rows=rows)
+    if not logged():
+        return redirect("/")
+
+    c = db()
+
+    cu = c.execute(
+        "SELECT * FROM customers WHERE name=?",
+        (name,)
+    ).fetchone()
+
+    if not cu:
+        c.close()
+        return "Customer not found", 404
+
+    # Oldest -> newest for correct running balance calculation
+    tx_rows = c.execute("""
+        SELECT * FROM transactions
+        WHERE customer=?
+        ORDER BY id ASC
+    """, (name,)).fetchall()
+
+    ledger = []
+    running_due = 0.0
+    total_udhar = 0.0
+    total_recovery = 0.0
+
+    for x in tx_rows:
+        debit = 0.0
+        credit = 0.0
+
+        # Only ACTIVE Udhar sales/gaming increase customer due
+        if (
+            x["status"] == "ACTIVE"
+            and x["mode"] == "Udhar"
+            and x["type"] in ("Product", "Gaming")
+        ):
+            debit = float(x["amount"] or 0)
+            running_due += debit
+            total_udhar += debit
+
+        # Recovery decreases customer due
+        elif (
+            x["status"] == "ACTIVE"
+            and x["type"] == "Recovery"
+        ):
+            credit = float(x["amount"] or 0)
+            running_due = max(0, running_due - credit)
+            total_recovery += credit
+
+        ledger.append({
+            "tx": x,
+            "debit": debit,
+            "credit": credit,
+            "balance": running_due
+        })
+
+    # Show newest transaction first
+    ledger.reverse()
+
+    c.close()
+
+    return render_template(
+        "customer.html",
+        customer=cu,
+        ledger=ledger,
+        total_udhar=total_udhar,
+        total_recovery=total_recovery
+    )
 
 @app.post("/supplier-payment")
 def supplier_payment():
