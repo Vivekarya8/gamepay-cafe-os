@@ -129,7 +129,18 @@
     <button class="print-btn" onclick="window.print()">
         🖨 Print Statement
     </button>
+{% if customer.mobile and customer.due > 0 %}
 
+<a
+    href="https://wa.me/91{{ customer.mobile }}?text={{ ('Namaste ' ~ customer.name ~ ' ji, aapka Gamepay Cafe ka ₹' ~ ('%.2f'|format(customer.due)) ~ ' payment pending hai. Kripya pending amount clear kar dein. Dhanyavaad - Gamepay Cafe') | urlencode }}"
+    target="_blank"
+    class="print-btn"
+    style="text-decoration:none;display:inline-block;margin-top:8px;"
+>
+    📲 Send WhatsApp Reminder
+</a>
+
+{% endif %}
 </div>
 
 
