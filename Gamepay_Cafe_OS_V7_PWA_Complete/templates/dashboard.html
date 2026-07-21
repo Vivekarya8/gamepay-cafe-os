@@ -210,6 +210,48 @@
 <form action="/change-pin" method="post" class="row"><input name="old" type="password" placeholder="Current PIN"><input name="new" type="password" placeholder="New PIN"><button>Change My PIN</button></form>
 {% if session.role=="Owner" %}<a class="btn" href="/excel">Download Full Excel</a><a class="btn" href="/backup-db">Download Database Backup</a>{% endif %}
 </div>
+    <h2>🚨 Smart Low Stock / Reorder Center</h2>
+
+<div class="panel">
+    <table>
+        <tr>
+            <th>Product</th>
+            <th>Current Stock</th>
+            <th>Status</th>
+            <th>Suggested Purchase</th>
+        </tr>
+
+        {% for p in inventory %}
+            {% if p.stock <= 10 %}
+            <tr>
+                <td><b>{{ p.name }}</b></td>
+
+                <td>{{ p.stock }}</td>
+
+                <td>
+                    {% if p.stock <= 0 %}
+                        🔴 OUT OF STOCK
+                    {% elif p.stock <= 5 %}
+                        🟠 CRITICAL
+                    {% else %}
+                        🟡 LOW STOCK
+                    {% endif %}
+                </td>
+
+                <td>
+                    {% if p.stock <= 0 %}
+                        Buy 20
+                    {% elif p.stock <= 5 %}
+                        Buy 15
+                    {% else %}
+                        Buy 10
+                    {% endif %}
+                </td>
+            </tr>
+            {% endif %}
+        {% endfor %}
+    </table>
+</div>
 <h2>📦 Inventory</h2><table><tr><th>Category</th><th>Product</th><th>Sell</th><th>Avg Cost</th><th>Stock</th></tr>{% for p in products %}<tr><td>{{p.category}}</td><td>{{p.name}}</td><td>₹{{p.sell}}</td><td>₹{{"%.2f"|format(p.cost)}}</td><td class="{% if p.stock<=p.low %}low{% endif %}">{{p.stock}}</td></tr>{% endfor %}</table>
 <h2>Recent Transactions</h2><table><tr><th>Time</th><th>Type</th><th>Detail</th><th>Mode</th><th>Amount</th><th>User</th><th>Actions</th></tr>{% for x in recent %}<tr><td>{{x.ts}}</td><td>{{x.type}}</td><td>{{x.detail}}</td><td>{{x.mode}}</td><td>₹{{x.amount}}</td><td>{{x.user}}</td><td><a href="/receipt/{{x.id}}">Receipt</a>{% if session.role=="Owner" and x.status=="ACTIVE" %}<form action="/void/{{x.id}}" method="post" style="display:inline"><input name="reason" placeholder="Void reason" size="8"><button>Void</button></form>{% endif %}</td></tr>{% endfor %}</table>
 {% if session.role=="Owner" %}<h2>📦 Physical Stock Adjustment</h2><form action="/stock-adjust" method="post" class="panel row"><select name="product">{% for p in products %}<option value="{{p.id}}">{{p.name}} (System {{p.stock}})</option>{% endfor %}</select><input name="physical" type="number" placeholder="Physical Qty"><select name="reason"><option>Counting Error</option><option>Damage</option><option>Missing</option><option>Free Given</option><option>Sold Without Entry</option><option>Other</option></select><button>Adjust with Audit</button></form>{% endif %}
