@@ -213,11 +213,118 @@ def expense():
     c=db();c.execute("INSERT INTO expenses(ts,day,category,mode,amount,note,app_user) VALUES(?,?,?,?,?,?,?)",(datetime.now().isoformat(timespec="seconds"),str(date.today()),request.form["category"],request.form["mode"],amt,request.form["note"],session["name"]));c.commit();c.close();audit("EXPENSE",f"{request.form['category']} {amt}");return redirect("/dashboard")
 @app.post("/purchase")
 def purchase():
-    if not logged():return redirect("/")
-    c=db();p=c.execute("SELECT * FROM products WHERE id=?",(request.form["product"],)).fetchone();q=int(request.form["qty"]);r=float(request.form["rate"]);newstock=p["stock"]+q;avg=(p["stock"]*p["cost"]+q*r)/newstock
-    c.execute("UPDATE products SET stock=?,cost=? WHERE id=?",(newstock,avg,p["id"]))
-    c.execute("INSERT INTO inventory_movements(ts,product,kind,qty,reason,app_user) VALUES(?,?,?,?,?,?)",(datetime.now().isoformat(timespec="seconds"),p["name"],"PURCHASE",q,"Supplier purchase",session["name"]))
-    c.execute("INSERT INTO purchases(ts,day,supplier,product,qty,rate,total,mode,app_user) VALUES(?,?,?,?,?,?,?,?,?)",(datetime.now().isoformat(timespec="seconds"),str(date.today()),request.form["supplier"],p["name"],q,r,q*r,request.form["mode"],session["name"]));c.commit();c.close();audit("PURCHASE",f'{p["name"]} x{q}');return redirect("/dashboard")
+    if not logged():
+        return redirect("/")
+
+    c = db()
+
+    # Day must be open for purchase entry
+    if not dayopen(c):
+        c.close()
+        return "Open day first before adding purchase", 400
+
+    # Read and clean form data
+    supplier = request.form.get("supplier", "").strip()
+    product_id = request.form.get("product", "").strip()
+    mode = request.form.get("mode", "").strip()
+
+    # Supplier is compulsory
+    if not supplier:
+        c.close()
+        return "Supplier name required", 400
+
+    # Only valid payment modes allowed
+    if mode not in ("Cash", "UPI", "Supplier Udhar"):
+        c.close()
+        return "Invalid payment mode", 400
+
+    # Validate Qty and Purchase Rate
+    try:
+        q = int(request.form.get("qty", "0"))
+        r = float(request.form.get("rate", "0"))
+    except (ValueError, TypeError):
+        c.close()
+        return "Invalid quantity or purchase rate", 400
+
+    if q <= 0:
+        c.close()
+        return "Quantity must be greater than 0", 400
+
+    if r < 0:
+        c.close()
+        return "Purchase rate cannot be negative", 400
+
+    # Validate product
+    p = c.execute(
+        "SELECT * FROM products WHERE id=?",
+        (product_id,)
+    ).fetchone()
+
+    if not p:
+        c.close()
+        return "Product not found", 404
+
+    # Calculate new stock and weighted average cost
+    old_stock = int(p["stock"] or 0)
+    old_cost = float(p["cost"] or 0)
+
+    new_stock = old_stock + q
+
+    if new_stock > 0:
+        avg = ((old_stock * old_cost) + (q * r)) / new_stock
+    else:
+        avg = r
+
+    total = q * r
+
+    # Update inventory
+    c.execute(
+        "UPDATE products SET stock=?,cost=? WHERE id=?",
+        (new_stock, avg, p["id"])
+    )
+
+    # Stock movement audit
+    c.execute(
+        """INSERT INTO inventory_movements
+        (ts,product,kind,qty,reason,app_user)
+        VALUES(?,?,?,?,?,?)""",
+        (
+            datetime.now().isoformat(timespec="seconds"),
+            p["name"],
+            "PURCHASE",
+            q,
+            f"Supplier purchase - {supplier}",
+            session["name"]
+        )
+    )
+
+    # Save purchase
+    c.execute(
+        """INSERT INTO purchases
+        (ts,day,supplier,product,qty,rate,total,mode,app_user)
+        VALUES(?,?,?,?,?,?,?,?,?)""",
+        (
+            datetime.now().isoformat(timespec="seconds"),
+            str(date.today()),
+            supplier,
+            p["name"],
+            q,
+            r,
+            total,
+            mode,
+            session["name"]
+        )
+    )
+
+    c.commit()
+    c.close()
+
+    audit(
+        "PURCHASE",
+        f'{p["name"]} x{q} @ ₹{r:.2f} from {supplier} via {mode}'
+    )
+
+    return redirect("/dashboard")
 @app.post("/close-day")
 def close_day():
     if not logged():return redirect("/")
