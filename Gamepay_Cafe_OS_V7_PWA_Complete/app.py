@@ -136,7 +136,17 @@ def dashboard():
     sales=[x for x in tx if x["type"] in ("Gaming","Product")]
     total=sum(x["amount"] for x in sales); cost=sum(x["cost"] for x in sales); exp=c.execute("SELECT COALESCE(SUM(amount),0) s FROM expenses WHERE day=?",(d,)).fetchone()["s"]
     due=c.execute("SELECT COALESCE(SUM(due),0) s FROM customers").fetchone()["s"]; products=c.execute("SELECT * FROM products ORDER BY category,name").fetchall()
-    customers=c.execute("SELECT * FROM customers ORDER BY due DESC").fetchall(); stations=c.execute("SELECT * FROM stations").fetchall(); recent=c.execute("SELECT * FROM transactions ORDER BY id DESC LIMIT 15").fetchall()
+    customers=c.execute("""
+    SELECT * FROM customers
+    ORDER BY
+        CASE
+            WHEN credit_limit > 0 AND (due / credit_limit) >= 0.80 THEN 1
+            WHEN credit_limit > 0 AND (due / credit_limit) >= 0.50 THEN 2
+            ELSE 3
+        END ASC,
+        due DESC,
+        name ASC
+""").fetchall(); stations=c.execute("SELECT * FROM stations").fetchall(); recent=c.execute("SELECT * FROM transactions ORDER BY id DESC LIMIT 15").fetchall()
     bd=c.execute("SELECT * FROM business_days WHERE day=?",(d,)).fetchone()
     running=c.execute("SELECT * FROM gaming_sessions WHERE status='RUNNING'").fetchall()
     movements=c.execute("SELECT * FROM inventory_movements ORDER BY id DESC LIMIT 20").fetchall()
