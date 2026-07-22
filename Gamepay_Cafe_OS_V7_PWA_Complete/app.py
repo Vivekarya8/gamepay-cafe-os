@@ -573,7 +573,7 @@ def close_day():
     c.commit()
     c.close()
 
-        audit(
+    audit(
         "CLOSE DAY",
         f"Expected {expected}, Actual {actual}, Difference {difference}"
     )
