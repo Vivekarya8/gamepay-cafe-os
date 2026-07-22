@@ -261,6 +261,41 @@ def expense():
     amt=float(request.form["amount"])
     if amt>=2000 and session.get("role")!="Owner":return "Owner approval required for ₹2000+",403
     c=db();c.execute("INSERT INTO expenses(ts,day,category,mode,amount,note,app_user) VALUES(?,?,?,?,?,?,?)",(datetime.now().isoformat(timespec="seconds"),str(date.today()),request.form["category"],request.form["mode"],amt,request.form["note"],session["name"]));c.commit();c.close();audit("EXPENSE",f"{request.form['category']} {amt}");return redirect("/dashboard")
+@app.post("/cash-movement")
+def cash_movement():
+    if not logged():
+        return redirect("/")
+
+    if session.get("role") != "Owner":
+        return "Owner access required", 403
+
+    kind = request.form.get("kind", "").strip()
+    amount = float(request.form.get("amount", 0))
+    note = request.form.get("note", "").strip()
+
+    if kind not in ("Cash Added", "Cash Withdrawn"):
+        return "Invalid cash movement", 400
+
+    if amount <= 0:
+        return "Amount must be greater than 0", 400
+
+    c = db()
+    c.execute(
+        "INSERT INTO cash_movements(ts,day,kind,amount,note,app_user) VALUES(?,?,?,?,?,?)",
+        (
+            datetime.now().isoformat(timespec="seconds"),
+            str(date.today()),
+            kind,
+            amount,
+            note,
+            session["name"]
+        )
+    )
+    c.commit()
+    c.close()
+
+    audit("CASH MOVEMENT", f"{kind} ₹{amount} - {note}")
+    return redirect("/dashboard")
 @app.post("/purchase")
 def purchase():
     if not logged():
