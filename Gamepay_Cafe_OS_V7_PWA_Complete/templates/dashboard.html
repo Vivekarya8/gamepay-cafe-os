@@ -223,27 +223,215 @@
 </section>
 {% if not bd or bd.closed %}<form action="/open-day" method="post" class="panel row"><input name="opening" type="number" step=".01" placeholder="Opening Cash" required><button>OPEN DAY</button></form>{% else %}<div class="notice">🟢 DAY OPEN · Opening Cash ₹{{"%.2f"|format(bd.opening_cash)}}</div>{% endif %}
 <div class="metrics"><div><small>Today Sales</small><b>₹{{"%.2f"|format(total)}}</b></div><div><small>COGS</small><b>₹{{"%.2f"|format(cost)}}</b></div><div><small>Expenses</small><b>₹{{"%.2f"|format(exp)}}</b></div><div><small>Est. Net Profit</small><b>₹{{"%.2f"|format(profit)}}</b></div><div><small>Total Udhar</small><b>₹{{"%.2f"|format(due)}}</b></div></div>
-<h2>⏱️ Live Gaming Sessions</h2><div class="cards">
-{% for s in stations %}{% set ns=namespace(run=None) %}{% for g in running %}{% if g.station_id==s.id %}{% set ns.run=g %}{% endif %}{% endfor %}
-<div class="panel"><b>Station {{s.id}} — {{s.name}}</b>
-{% if ns.run %}<div class="timer" data-start="{{ns.run.start_ts}}" data-min="{{ns.run.minutes}}">Calculating...</div><small>{{ns.run.label}} · ₹{{ns.run.price}}</small>
-<form action="/session/stop" method="post"><input type="hidden" name="station" value="{{s.id}}"><select name="mode"><option>Cash</option><option>UPI</option><option>Udhar</option></select><select name="customer">
-    <option value="">Select Udhar Customer</option>
-    {% for c in customers %}
-        {% if c.approved %}
+<!-- =====================================================
+     GAMEPAY CAFE — LIVE GAMING ARENA
+     ===================================================== -->
 
-        {% set available = c.credit_limit - c.due %}
+<section class="gp-arena">
 
-        <option value="{{c.name}}">
-            {{c.name}} | Due ₹{{"%.2f"|format(c.due)}} | Limit ₹{{"%.2f"|format(c.credit_limit)}} | Available ₹{{"%.2f"|format(available)}}
-        </option>
+    <div class="gp-section-head">
+        <div>
+            <div class="gp-section-kicker">◈ LIVE FLOOR CONTROL</div>
+            <h2>🎮 Gaming Arena</h2>
+            <p>Monitor and control every gaming station from one place.</p>
+        </div>
 
-        {% endif %}
+        <div class="gp-arena-legend">
+            <span><i class="gp-dot available"></i> Available</span>
+            <span><i class="gp-dot playing"></i> Playing</span>
+        </div>
+    </div>
+
+    <div class="gp-station-grid">
+
+    {% for s in stations %}
+
+        {% set ns=namespace(run=None) %}
+
+        {% for g in running %}
+            {% if g.station_id==s.id %}
+                {% set ns.run=g %}
+            {% endif %}
+        {% endfor %}
+
+        <article class="gp-station-card {% if ns.run %}is-playing{% else %}is-available{% endif %}">
+
+            <div class="gp-station-top">
+
+                <div class="gp-station-number">
+                    {{ "%02d"|format(s.id) }}
+                </div>
+
+                <div class="gp-station-title">
+                    <small>STATION {{ s.id }}</small>
+                    <h3>{{ s.name }}</h3>
+                </div>
+
+                {% if ns.run %}
+                    <div class="gp-status playing">
+                        <span></span> PLAYING
+                    </div>
+                {% else %}
+                    <div class="gp-status available">
+                        <span></span> AVAILABLE
+                    </div>
+                {% endif %}
+
+            </div>
+
+            {% if ns.run %}
+
+                <div class="gp-live-session">
+
+                    <small class="gp-session-label">
+                        ACTIVE SESSION
+                    </small>
+
+                    <div
+                        class="timer gp-arena-timer"
+                        data-start="{{ns.run.start_ts}}"
+                        data-min="{{ns.run.minutes}}">
+                        Calculating...
+                    </div>
+
+                    <div class="gp-session-package">
+                        {{ns.run.label}}
+                        <span>₹{{ns.run.price}}</span>
+                    </div>
+
+                </div>
+
+                <form action="/session/stop"
+                      method="post"
+                      class="gp-stop-form">
+
+                    <input type="hidden"
+                           name="station"
+                           value="{{s.id}}">
+
+                    <select name="mode">
+                        <option>Cash</option>
+                        <option>UPI</option>
+                        <option>Udhar</option>
+                    </select>
+
+                    <select name="customer">
+
+                        <option value="">
+                            Select Udhar Customer
+                        </option>
+
+                        {% for c in customers %}
+
+                            {% if c.approved %}
+
+                                {% set available =
+                                    c.credit_limit - c.due %}
+
+                                <option value="{{c.name}}">
+                                    {{c.name}}
+                                    | Due ₹{{"%.2f"|format(c.due)}}
+                                    | Available ₹{{"%.2f"|format(available)}}
+                                </option>
+
+                            {% endif %}
+
+                        {% endfor %}
+
+                    </select>
+
+                    <button class="gp-stop-btn">
+                        ■ STOP & BILL
+                    </button>
+
+                </form>
+
+            {% elif s.type=="time" %}
+
+                <div class="gp-station-ready">
+
+                    <div class="gp-ready-icon">▶</div>
+
+                    <div>
+                        <small>READY TO PLAY</small>
+                        <p>Select a session to start</p>
+                    </div>
+
+                </div>
+
+                <form action="/session/start"
+                      method="post"
+                      class="gp-start-options">
+
+                    {% for r in s.rates.split(",") %}
+
+                        {% set parts=r.split(":") %}
+
+                        <button
+                            name="label"
+                            value="{{parts[0]}}"
+                            onclick="
+                                this.form.minutes.value='{{30 if '30 Min' in parts[0] else 60}}';
+                                this.form.price.value='{{parts[1]}}'
+                            ">
+
+                            <span>▶</span>
+
+                            <div>
+                                <small>START SESSION</small>
+                                <b>{{parts[0]}}</b>
+                            </div>
+
+                            <strong>
+                                ₹{{parts[1]}}
+                            </strong>
+
+                        </button>
+
+                    {% endfor %}
+
+                    <input type="hidden"
+                           name="station"
+                           value="{{s.id}}">
+
+                    <input type="hidden"
+                           name="minutes">
+
+                    <input type="hidden"
+                           name="price">
+
+                </form>
+
+            {% else %}
+
+                <div class="gp-coin-station">
+
+                    <div class="gp-coin-icon">◉</div>
+
+                    <small>COIN MODE</small>
+
+                    <h4>Quick Play Station</h4>
+
+                    <p>
+                        Use Gaming Quick Billing below
+                        to register gameplay.
+                    </p>
+
+                    <div class="gp-coin-status">
+                        READY FOR PLAYER
+                    </div>
+
+                </div>
+
+            {% endif %}
+
+        </article>
+
     {% endfor %}
-</select><button>STOP & BILL</button></form>
-{% elif s.type=="time" %}<form action="/session/start" method="post">{% for r in s.rates.split(",") %}{% set parts=r.split(":") %}<button name="label" value="{{parts[0]}}" onclick="this.form.minutes.value='{{30 if '30 Min' in parts[0] else 60}}';this.form.price.value='{{parts[1]}}'">Start {{r}}</button>{% endfor %}<input type="hidden" name="station" value="{{s.id}}"><input type="hidden" name="minutes"><input type="hidden" name="price"></form>
-{% else %}<small>Coin based — use Quick Billing below</small>{% endif %}</div>{% endfor %}</div>
-<script>setInterval(()=>document.querySelectorAll(".timer").forEach(e=>{let start=new Date(e.dataset.start).getTime(),left=+e.dataset.min*60-Math.floor((Date.now()-start)/1000);e.textContent=left>0?Math.floor(left/60)+":"+String(left%60).padStart(2,"0"):"TIME OVER"}),1000)</script><h2>🎮 Gaming Quick Billing</h2><div class="cards">{% for s in stations %}<form action="/gaming" method="post" class="panel"><b>Station {{s.id}} — {{s.name}}</b><input type="hidden" name="station" value="{{s.id}}"><select name="package">{% for r in s.rates.split(",") %}<option>{{r}}</option>{% endfor %}</select><select name="mode"><option>Cash</option><option>UPI</option><option>Udhar</option></select><select name="customer">
+
+    </div>
+
+</section><script>setInterval(()=>document.querySelectorAll(".timer").forEach(e=>{let start=new Date(e.dataset.start).getTime(),left=+e.dataset.min*60-Math.floor((Date.now()-start)/1000);e.textContent=left>0?Math.floor(left/60)+":"+String(left%60).padStart(2,"0"):"TIME OVER"}),1000)</script><h2>🎮 Gaming Quick Billing</h2><div class="cards">{% for s in stations %}<form action="/gaming" method="post" class="panel"><b>Station {{s.id}} — {{s.name}}</b><input type="hidden" name="station" value="{{s.id}}"><select name="package">{% for r in s.rates.split(",") %}<option>{{r}}</option>{% endfor %}</select><select name="mode"><option>Cash</option><option>UPI</option><option>Udhar</option></select><select name="customer">
     <option value="">Select Udhar Customer</option>
 
     {% for c in customers %}
