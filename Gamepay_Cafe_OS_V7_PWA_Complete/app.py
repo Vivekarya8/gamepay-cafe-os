@@ -1000,14 +1000,54 @@ def day_history():
     days = c.execute(
         """
         SELECT
-            day,
-            opening_cash,
-            closed,
-            expected_cash,
-            actual_cash,
-            cash_diff
-        FROM business_days
-        ORDER BY day DESC
+            b.day,
+            b.opening_cash,
+            b.closed,
+            b.expected_cash,
+            b.actual_cash,
+            b.cash_diff,
+
+            COALESCE((
+                SELECT SUM(t.amount)
+                FROM transactions t
+                WHERE t.day = b.day
+                  AND t.status = 'ACTIVE'
+                  AND t.type IN ('Product','Gaming')
+            ),0) AS sales,
+
+            COALESCE((
+                SELECT SUM(t.cost)
+                FROM transactions t
+                WHERE t.day = b.day
+                  AND t.status = 'ACTIVE'
+                  AND t.type IN ('Product','Gaming')
+            ),0) AS cogs,
+
+            COALESCE((
+                SELECT SUM(e.amount)
+                FROM expenses e
+                WHERE e.day = b.day
+            ),0) AS expenses,
+
+            COALESCE((
+                SELECT SUM(t.amount)
+                FROM transactions t
+                WHERE t.day = b.day
+                  AND t.status = 'ACTIVE'
+                  AND t.type IN ('Product','Gaming')
+                  AND t.mode = 'Udhar'
+            ),0) AS udhar_sales,
+
+            COALESCE((
+                SELECT SUM(t.amount)
+                FROM transactions t
+                WHERE t.day = b.day
+                  AND t.status = 'ACTIVE'
+                  AND t.type = 'Recovery'
+            ),0) AS recovery
+
+        FROM business_days b
+        ORDER BY b.day DESC
         LIMIT 90
         """
     ).fetchall()
@@ -1018,5 +1058,5 @@ def day_history():
         "day_history.html",
         days=days
     )
-if __name__=="__main__":
+    if __name__=="__main__":
     app.run(host="0.0.0.0",port=5000,debug=False)
