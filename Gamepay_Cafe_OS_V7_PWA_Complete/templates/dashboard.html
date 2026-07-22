@@ -485,6 +485,49 @@
 </div>
 
 {% endif %} 
+            {% if bd and not bd.closed and session.role=="Owner" %}
+
+<h2>💵 Cash Drawer Adjustment</h2>
+
+<div class="panel">
+
+<p>
+    Owner ne drawer me extra cash dala ho ya drawer se cash nikala ho,
+    to yahan record karein.
+</p>
+
+<form action="/cash-movement" method="post" class="row">
+
+    <select name="kind" required>
+        <option value="">Select Action</option>
+        <option value="Cash Added">➕ Cash Added</option>
+        <option value="Cash Withdrawn">➖ Cash Withdrawn</option>
+    </select>
+
+    <input
+        name="amount"
+        type="number"
+        min="0.01"
+        step="0.01"
+        placeholder="Amount ₹"
+        required
+    >
+
+    <input
+        name="note"
+        placeholder="Reason / Note"
+        required
+    >
+
+    <button type="submit">
+        💾 Record Cash Movement
+    </button>
+
+</form>
+
+</div>
+
+{% endif %}
             <h2>🔒 Day Closing</h2><form action="/close-day" method="post" class="panel row"><input name="actual" type="number" step=".01" placeholder="Actual Cash Drawer" required><button>Close Day</button></form>{% elif bd and bd.closed %}<div class="notice">🔒 DAY CLOSED · Expected ₹{{bd.expected_cash}} · Actual ₹{{bd.actual_cash}} · Difference ₹{{bd.cash_diff}}</div>{% endif %}
 </main><script>if("serviceWorker" in navigator){navigator.serviceWorker.register("/service-worker.js").catch(()=>{})}</script><script>
 let deferredPrompt=null;
