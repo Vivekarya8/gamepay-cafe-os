@@ -1754,3 +1754,30 @@ body > main{
   }
 
 }
+
+
+/* FINAL SIDEBAR ALIGNMENT FIX */
+
+body > main{
+    margin-left:245px !important;
+    width:calc(100% - 245px) !important;
+    padding-left:32px !important;
+    padding-right:32px !important;
+    overflow-x:hidden;
+}
+
+@media(max-width:1050px) and (min-width:801px){
+    body > main{
+        margin-left:220px !important;
+        width:calc(100% - 220px) !important;
+    }
+}
+
+@media(max-width:800px){
+    body > main{
+        margin-left:0 !important;
+        width:100% !important;
+        padding-left:14px !important;
+        padding-right:14px !important;
+    }
+}
