@@ -431,8 +431,61 @@
 
     </div>
 
-</section><script>setInterval(()=>document.querySelectorAll(".timer").forEach(e=>{let start=new Date(e.dataset.start).getTime(),left=+e.dataset.min*60-Math.floor((Date.now()-start)/1000);e.textContent=left>0?Math.floor(left/60)+":"+String(left%60).padStart(2,"0"):"TIME OVER"}),1000)</script><h2>🎮 Gaming Quick Billing</h2><div class="cards">{% for s in stations %}<form action="/gaming" method="post" class="panel"><b>Station {{s.id}} — {{s.name}}</b><input type="hidden" name="station" value="{{s.id}}"><select name="package">{% for r in s.rates.split(",") %}<option>{{r}}</option>{% endfor %}</select><select name="mode"><option>Cash</option><option>UPI</option><option>Udhar</option></select><select name="customer">
-    <option value="">Select Udhar Customer</option>
+</section><script>
+function updateGamingTimers(){
+
+    document.querySelectorAll(".timer").forEach(function(e){
+
+        let raw = (e.dataset.start || "").trim();
+
+        /* Normalize SQLite/Python datetime:
+           2026-07-22 11:43:00
+           becomes
+           2026-07-22T11:43:00
+        */
+        raw = raw.replace(" ", "T");
+
+        let start = new Date(raw).getTime();
+        let minutes = Number(e.dataset.min || 0);
+
+        if(isNaN(start)){
+            e.textContent = "TIMER ERROR";
+            return;
+        }
+
+        let elapsed = Math.floor(
+            (Date.now() - start) / 1000
+        );
+
+        let left = (minutes * 60) - elapsed;
+
+        if(left > 0){
+
+            let mins = Math.floor(left / 60);
+            let secs = left % 60;
+
+            e.textContent =
+                mins + ":" +
+                String(secs).padStart(2,"0");
+
+        }else{
+
+            e.textContent = "TIME OVER";
+            e.classList.add("is-overtime");
+
+        }
+
+    });
+
+}
+
+updateGamingTimers();
+
+setInterval(
+    updateGamingTimers,
+    1000
+);
+</script>
 
     {% for c in customers %}
         {% if c.approved %}
