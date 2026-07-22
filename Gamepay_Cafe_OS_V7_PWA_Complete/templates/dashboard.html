@@ -487,19 +487,7 @@ setInterval(
 );
 </script>
 
-    {% for c in customers %}
-        {% if c.approved %}
-
-        {% set available = c.credit_limit - c.due %}
-
-        <option value="{{c.name}}">
-            {{c.name}} | Due ₹{{"%.2f"|format(c.due)}} | Limit ₹{{"%.2f"|format(c.credit_limit)}} | Available ₹{{"%.2f"|format(available)}}
-        </option>
-
-        {% endif %}
-    {% endfor %}
-</select><button>Bill Gaming</button></form>{% endfor %}</div>
-<h2>🧾 Product POS</h2><form action="/sale" method="post" class="panel row"><select name="product">{% for p in products %}<option value="{{p.id}}">{{p.name}} · ₹{{p.sell}} · Stock {{p.stock}}</option>{% endfor %}</select><input name="qty" type="number" min="1" value="1"><select name="mode"><option>Cash</option><option>UPI</option><option>Udhar</option></select><select name="customer">
+    <h2>🧾 Product POS</h2><form action="/sale" method="post" class="panel row"><select name="product">{% for p in products %}<option value="{{p.id}}">{{p.name}} · ₹{{p.sell}} · Stock {{p.stock}}</option>{% endfor %}</select><input name="qty" type="number" min="1" value="1"><select name="mode"><option>Cash</option><option>UPI</option><option>Udhar</option></select><select name="customer">
     <option value="">Select Udhar Customer</option>
 
     {% for c in customers %}
