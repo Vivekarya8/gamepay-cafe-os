@@ -573,14 +573,15 @@ def close_day():
     c.commit()
     c.close()
 
-    audit(
+        audit(
         "CLOSE DAY",
         f"Expected {expected}, Actual {actual}, Difference {difference}"
     )
 
     return redirect("/dashboard")
-    
-    @app.post("/session/start")
+
+
+@app.post("/session/start")
 def session_start():
     if not logged():return redirect("/")
     c=db()
