@@ -578,7 +578,9 @@ def close_day():
         f"Expected {expected}, Actual {actual}, Difference {difference}"
     )
 
-    return redirect("/dashboard")@app.post("/session/start")
+    return redirect("/dashboard")
+    
+    @app.post("/session/start")
 def session_start():
     if not logged():return redirect("/")
     c=db()
