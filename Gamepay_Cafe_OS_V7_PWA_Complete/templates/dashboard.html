@@ -147,8 +147,80 @@
 
 </header>
 
-<main>
-<div class="row"><h1>Business Control Dashboard</h1>{% if session.role=="Owner" %}<a class="btn" href="/audit">Audit Log</a><a class="btn" href="/day-history">📅 Day History</a><a class="btn" href="/export">CSV</a><a class="btn" href="/excel">Excel Report</a><a class="btn" href="/backup-db">Backup DB</a><a class="btn" href="/cloud-status">Cloud Status</a>{% endif %}</div>
+<!-- =====================================================
+     GAMEPAY CAFE — DASHBOARD HERO
+     ===================================================== -->
+
+<section class="gp-dashboard-hero">
+
+    <div class="gp-hero-copy">
+
+        <div class="gp-eyebrow">
+            ◈ BUSINESS OVERVIEW
+        </div>
+
+        <h1>
+            {% if session.name %}
+                Welcome back, {{ session.name }}
+            {% else %}
+                Welcome to Gamepay
+            {% endif %}
+        </h1>
+
+        <p>
+            Your gaming café command center is ready.
+            Track the floor, sales and business from one place.
+        </p>
+
+    </div>
+
+    {% if session.role=="Owner" %}
+
+    <div class="gp-management-tools">
+
+        <span class="gp-tools-label">MANAGEMENT TOOLS</span>
+
+        <div class="gp-tool-actions">
+
+            <a href="/export" class="gp-tool-btn">
+                <span>⇩</span>
+                <div>
+                    <small>EXPORT</small>
+                    <b>CSV</b>
+                </div>
+            </a>
+
+            <a href="/excel" class="gp-tool-btn">
+                <span>▦</span>
+                <div>
+                    <small>REPORT</small>
+                    <b>Excel</b>
+                </div>
+            </a>
+
+            <a href="/backup-db" class="gp-tool-btn">
+                <span>◫</span>
+                <div>
+                    <small>DATABASE</small>
+                    <b>Backup</b>
+                </div>
+            </a>
+
+            <a href="/cloud-status" class="gp-tool-btn">
+                <span>☁</span>
+                <div>
+                    <small>SYSTEM</small>
+                    <b>Cloud</b>
+                </div>
+            </a>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+</section>
 {% if not bd or bd.closed %}<form action="/open-day" method="post" class="panel row"><input name="opening" type="number" step=".01" placeholder="Opening Cash" required><button>OPEN DAY</button></form>{% else %}<div class="notice">🟢 DAY OPEN · Opening Cash ₹{{"%.2f"|format(bd.opening_cash)}}</div>{% endif %}
 <div class="metrics"><div><small>Today Sales</small><b>₹{{"%.2f"|format(total)}}</b></div><div><small>COGS</small><b>₹{{"%.2f"|format(cost)}}</b></div><div><small>Expenses</small><b>₹{{"%.2f"|format(exp)}}</b></div><div><small>Est. Net Profit</small><b>₹{{"%.2f"|format(profit)}}</b></div><div><small>Total Udhar</small><b>₹{{"%.2f"|format(due)}}</b></div></div>
 <h2>⏱️ Live Gaming Sessions</h2><div class="cards">
