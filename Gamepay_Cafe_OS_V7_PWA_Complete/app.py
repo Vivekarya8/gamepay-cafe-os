@@ -987,5 +987,36 @@ def audit_page():
 # Initialize database when app starts on Render/Gunicorn
 init()
 
+@app.get("/day-history")
+def day_history():
+    if not logged():
+        return redirect("/")
+
+    if session.get("role") != "Owner":
+        return "Owner access required", 403
+
+    c = db()
+
+    days = c.execute(
+        """
+        SELECT
+            day,
+            opening_cash,
+            closed,
+            expected_cash,
+            actual_cash,
+            cash_diff
+        FROM business_days
+        ORDER BY day DESC
+        LIMIT 90
+        """
+    ).fetchall()
+
+    c.close()
+
+    return render_template(
+        "day_history.html",
+        days=days
+    )
 if __name__=="__main__":
     app.run(host="0.0.0.0",port=5000,debug=False)
