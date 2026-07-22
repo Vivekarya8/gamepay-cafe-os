@@ -429,3 +429,448 @@ tr:hover td{
     box-shadow:none;
   }
 }
+/* =========================================================
+   GAMEPAY CAFE OS — STAGE 1
+   GAMING + CAFE COMMAND CENTER SHELL
+   ========================================================= */
+
+/* ---------- PREMIUM BACKGROUND ATMOSPHERE ---------- */
+
+body{
+  background:
+    radial-gradient(circle at 8% 12%, rgba(112,72,255,.15), transparent 24%),
+    radial-gradient(circle at 92% 18%, rgba(0,220,255,.08), transparent 22%),
+    radial-gradient(circle at 75% 85%, rgba(255,151,72,.045), transparent 22%),
+    linear-gradient(135deg,#070a13 0%,#090e1d 48%,#070b16 100%);
+  background-attachment:fixed;
+}
+
+/* ambient neon glow */
+body::after{
+  content:"";
+  position:fixed;
+  width:420px;
+  height:420px;
+  right:-180px;
+  top:28%;
+  border-radius:50%;
+  background:rgba(72,197,255,.035);
+  filter:blur(70px);
+  pointer-events:none;
+  z-index:-1;
+}
+
+/* ---------- TOP COMMAND BAR ---------- */
+
+header{
+  min-height:78px;
+  padding:0 32px;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(8,12,25,.97),
+      rgba(14,18,38,.96),
+      rgba(8,12,25,.97)
+    );
+  border-bottom:1px solid rgba(116,88,255,.30);
+  box-shadow:
+    0 10px 35px rgba(0,0,0,.38),
+    0 1px 0 rgba(255,255,255,.025) inset;
+}
+
+header b{
+  font-size:19px;
+  font-weight:800;
+  letter-spacing:.5px;
+  text-transform:uppercase;
+}
+
+header b::before{
+  content:"";
+  display:inline-block;
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:#38e6c5;
+  margin-right:10px;
+  box-shadow:
+    0 0 8px #38e6c5,
+    0 0 18px rgba(56,230,197,.55);
+}
+
+header span{
+  padding:8px 14px;
+  border:1px solid rgba(255,255,255,.07);
+  background:rgba(255,255,255,.025);
+  border-radius:20px;
+}
+
+/* ---------- MAIN WORKSPACE ---------- */
+
+main{
+  max-width:1700px;
+  padding:32px 30px 60px;
+}
+
+main > h1{
+  position:relative;
+  display:inline-block;
+  margin:8px 0 28px;
+  font-size:36px;
+  font-weight:850;
+  letter-spacing:-1px;
+}
+
+main > h1::after{
+  content:"";
+  position:absolute;
+  left:0;
+  bottom:-9px;
+  width:76px;
+  height:3px;
+  border-radius:10px;
+  background:linear-gradient(90deg,#7657ff,#26d7e8);
+  box-shadow:0 0 15px rgba(118,87,255,.55);
+}
+
+/* ---------- TOP ACTION BUTTONS ---------- */
+
+main > .row:first-of-type{
+  gap:9px;
+  margin-bottom:18px;
+}
+
+main > .row:first-of-type .btn{
+  background:rgba(18,26,49,.92);
+  border:1px solid #303e65;
+  box-shadow:none;
+  color:#dfe5ff;
+}
+
+main > .row:first-of-type .btn:hover{
+  background:linear-gradient(135deg,#6d50f5,#5140d8);
+  border-color:#806cff;
+  color:white;
+}
+
+/* ---------- OPEN DAY / CONTROL PANEL ---------- */
+
+main > form.panel,
+main > .panel:first-of-type{
+  position:relative;
+  overflow:hidden;
+}
+
+main > form.panel::before,
+main > .panel:first-of-type::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:0;
+  width:100%;
+  height:2px;
+  background:linear-gradient(
+    90deg,
+    transparent,
+    #7457ff,
+    #27d7e7,
+    transparent
+  );
+  opacity:.75;
+}
+
+/* ---------- KPI COMMAND CARDS ---------- */
+
+.metrics{
+  grid-template-columns:repeat(5,minmax(160px,1fr));
+  gap:14px;
+  margin:0 0 30px;
+}
+
+.metrics div{
+  min-height:118px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  padding:20px 21px;
+  border-radius:18px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(21,30,54,.98),
+      rgba(12,19,36,.98)
+    );
+  border:1px solid #263657;
+  box-shadow:
+    0 14px 30px rgba(0,0,0,.26),
+    0 1px 0 rgba(255,255,255,.025) inset;
+}
+
+.metrics div:nth-child(1)::before{
+  background:linear-gradient(#20d9ef,#4f7cff);
+}
+
+.metrics div:nth-child(2)::before{
+  background:linear-gradient(#9d72ff,#6750ff);
+}
+
+.metrics div:nth-child(3)::before{
+  background:linear-gradient(#ff707f,#ff9d5c);
+}
+
+.metrics div:nth-child(4)::before{
+  background:linear-gradient(#39e6a4,#19cfd4);
+}
+
+.metrics div:nth-child(5)::before{
+  background:linear-gradient(#ff9d5c,#ffc45c);
+}
+
+.metrics b{
+  font-size:29px;
+  font-weight:850;
+  letter-spacing:-.5px;
+}
+
+/* ---------- SECTION HEADINGS ---------- */
+
+main h2{
+  position:relative;
+  padding-left:16px;
+  margin-top:34px;
+  font-size:24px;
+  font-weight:800;
+}
+
+main h2::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:3px;
+  bottom:3px;
+  width:4px;
+  border-radius:8px;
+  background:linear-gradient(#7657ff,#27d8e7);
+  box-shadow:0 0 12px rgba(118,87,255,.45);
+}
+
+/* ---------- GAMING STATION ARENA ---------- */
+
+.cards{
+  gap:14px;
+}
+
+.cards .panel{
+  min-height:170px;
+  border-radius:18px;
+  background:
+    radial-gradient(circle at 100% 0%,rgba(116,87,255,.09),transparent 35%),
+    linear-gradient(145deg,#121b31,#0d1426);
+  border:1px solid #29385a;
+  box-shadow:
+    0 13px 28px rgba(0,0,0,.25),
+    inset 0 1px rgba(255,255,255,.025);
+}
+
+.cards .panel::after{
+  content:"";
+  position:absolute;
+  right:13px;
+  top:13px;
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#43e6a4;
+  box-shadow:0 0 10px rgba(67,230,164,.7);
+}
+
+.cards .panel:hover{
+  transform:translateY(-4px);
+  border-color:#536da5;
+  box-shadow:
+    0 18px 35px rgba(0,0,0,.32),
+    0 0 25px rgba(108,83,255,.09);
+}
+
+.cards .panel b:first-child{
+  font-size:17px;
+  line-height:1.4;
+}
+
+/* ---------- FORMS / POS CONTROLS ---------- */
+
+input,
+select{
+  min-height:43px;
+  background:rgba(6,12,26,.88);
+  border:1px solid #314161;
+  box-shadow:inset 0 2px 5px rgba(0,0,0,.18);
+}
+
+input:hover,
+select:hover{
+  border-color:#465c87;
+}
+
+input:focus,
+select:focus{
+  border-color:#795cff;
+  box-shadow:
+    0 0 0 3px rgba(121,92,255,.12),
+    0 0 16px rgba(121,92,255,.08);
+}
+
+/* ---------- PREMIUM ACTION BUTTONS ---------- */
+
+button,
+.btn{
+  min-height:42px;
+  background:
+    linear-gradient(135deg,#7255f6,#5840db);
+  border:1px solid rgba(153,130,255,.30);
+  font-weight:700;
+  letter-spacing:.1px;
+}
+
+button:hover,
+.btn:hover{
+  background:
+    linear-gradient(135deg,#8065ff,#6149e9);
+}
+
+/* ---------- OPERATION PANELS ---------- */
+
+.twocol{
+  gap:18px;
+}
+
+.twocol > .panel{
+  min-height:100%;
+}
+
+/* Café warmth for alternating operation panels */
+.twocol > .panel:nth-child(even){
+  background:
+    radial-gradient(circle at 100% 0%,rgba(217,151,92,.055),transparent 35%),
+    linear-gradient(145deg,#151c2e,#0e1525);
+}
+
+/* ---------- TABLE DATA CONSOLE ---------- */
+
+table{
+  border:1px solid #273657;
+  border-radius:14px;
+}
+
+th{
+  background:
+    linear-gradient(180deg,#1b2745,#17213b);
+  color:#cbd5f1;
+  padding:13px 11px;
+}
+
+td{
+  background:rgba(13,20,37,.76);
+}
+
+tr:nth-child(even) td{
+  background:rgba(16,24,43,.82);
+}
+
+tr:hover td{
+  background:#1a2744;
+}
+
+/* ---------- STATUS NOTICE ---------- */
+
+.notice{
+  position:relative;
+  overflow:hidden;
+  background:
+    linear-gradient(
+      100deg,
+      rgba(108,80,245,.18),
+      rgba(27,203,221,.075)
+    );
+  border:1px solid rgba(112,91,230,.34);
+}
+
+.notice::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:0;
+  bottom:0;
+  width:3px;
+  background:#7257ff;
+}
+
+/* ---------- GAMING / CAFE VISUAL SEPARATION ---------- */
+
+main h2:nth-of-type(odd)::before{
+  background:linear-gradient(#7758ff,#22d9eb);
+}
+
+main h2:nth-of-type(even)::before{
+  background:linear-gradient(#d9975c,#ffb55e);
+}
+
+/* ---------- MOBILE COMMAND CENTER ---------- */
+
+@media(max-width:1100px){
+
+  .metrics{
+    grid-template-columns:repeat(3,1fr);
+  }
+
+}
+
+@media(max-width:800px){
+
+  header{
+    min-height:64px;
+    padding:12px 15px;
+  }
+
+  main{
+    padding:18px 13px 45px;
+  }
+
+  main > h1{
+    font-size:29px;
+  }
+
+  .metrics{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .cards{
+    grid-template-columns:repeat(
+      auto-fit,
+      minmax(220px,1fr)
+    );
+  }
+
+}
+
+@media(max-width:500px){
+
+  .metrics{
+    grid-template-columns:1fr 1fr;
+    gap:9px;
+  }
+
+  .metrics div{
+    min-height:100px;
+    padding:14px;
+  }
+
+  .metrics b{
+    font-size:22px;
+  }
+
+  main h2{
+    font-size:21px;
+  }
+
+}
