@@ -425,73 +425,66 @@
             {% if session.role=="Owner" %}<h2>📦 Physical Stock Adjustment</h2><form action="/stock-adjust" method="post" class="panel row"><select name="product">{% for p in products %}<option value="{{p.id}}">{{p.name}} (System {{p.stock}})</option>{% endfor %}</select><input name="physical" type="number" placeholder="Physical Qty"><select name="reason"><option>Counting Error</option><option>Damage</option><option>Missing</option><option>Free Given</option><option>Sold Without Entry</option><option>Other</option></select><button>Adjust with Audit</button></form>{% endif %}
 <h2>📲 Udhar Reminder</h2><form action="/reminder" method="post" class="panel row"><select name="customer">{% for c in customers %}<option>{{c.name}}</option>{% endfor %}</select><button>Generate Reminder</button></form>
 <h2>📚 Stock Movement Audit</h2><table><tr><th>Time</th><th>Product</th><th>Type</th><th>Qty</th><th>Reason</th><th>User</th></tr>{% for m in movements %}<tr><td>{{m.ts}}</td><td>{{m.product}}</td><td>{{m.kind}}</td><td>{{m.qty}}</td><td>{{m.reason}}</td><td>{{m.user}}</td></tr>{% endfor %}</table>{% if bd and not bd.closed %}
-    {% if bd and not bd.closed %}
 
 <h2>💰 Expected Cash Drawer</h2>
 
 <div class="panel">
-
 <table>
-<tr>
-    <th>Cash Movement</th>
-    <th>Amount</th>
-</tr>
+    <tr>
+        <th>Cash Movement</th>
+        <th>Amount</th>
+    </tr>
 
-<tr>
-    <td>Opening Cash</td>
-    <td>₹{{ "%.2f"|format(opening_cash) }}</td>
-</tr>
+    <tr>
+        <td>Opening Cash</td>
+        <td>₹{{ "%.2f"|format(opening_cash) }}</td>
+    </tr>
 
-<tr>
-    <td>➕ Cash Product + Gaming Sales</td>
-    <td>₹{{ "%.2f"|format(cash_sales) }}</td>
-</tr>
+    <tr>
+        <td>➕ Cash Product + Gaming Sales</td>
+        <td>₹{{ "%.2f"|format(cash_sales) }}</td>
+    </tr>
 
-<tr>
-    <td>➕ Cash Udhar Recovery</td>
-    <td>₹{{ "%.2f"|format(cash_recovery) }}</td>
-</tr>
+    <tr>
+        <td>➕ Cash Udhar Recovery</td>
+        <td>₹{{ "%.2f"|format(cash_recovery) }}</td>
+    </tr>
 
-<tr>
-    <td>➖ Cash Expenses</td>
-    <td>₹{{ "%.2f"|format(cash_expenses) }}</td>
-</tr>
+    <tr>
+        <td>➖ Cash Expenses</td>
+        <td>₹{{ "%.2f"|format(cash_expenses) }}</td>
+    </tr>
 
-<tr>
-    <td>➖ Cash Stock Purchases</td>
-    <td>₹{{ "%.2f"|format(cash_purchases) }}</td>
-</tr>
+    <tr>
+        <td>➖ Cash Stock Purchases</td>
+        <td>₹{{ "%.2f"|format(cash_purchases) }}</td>
+    </tr>
 
-<tr>
-    <td>➖ Cash Supplier Payments</td>
-    <td>₹{{ "%.2f"|format(cash_supplier_payments) }}</td>
-</tr>
+    <tr>
+        <td>➖ Cash Supplier Payments</td>
+        <td>₹{{ "%.2f"|format(cash_supplier_payments) }}</td>
+    </tr>
 
-<tr>
-    <td><b>💵 EXPECTED CASH DRAWER</b></td>
-    <td>
-        <b style="font-size:22px;">
-            ₹{{ "%.2f"|format(expected_cash) }}
-        </b>
-    </td>
-</tr>
-
+    <tr>
+        <td><b>💵 EXPECTED CASH DRAWER</b></td>
+        <td>
+            <b style="font-size:22px;">
+                ₹{{ "%.2f"|format(expected_cash) }}
+            </b>
+        </td>
+    </tr>
 </table>
-
-<p>
-    Count the actual physical cash in the drawer and enter that amount below.
-</p>
-
 </div>
 
-{% if session.role=="Owner" %}
+
+{% if session.role == "Owner" %}
 
 <h2>💵 Cash Drawer Adjustment</h2>
 
 <div class="panel">
 
 <p>
-    Drawer me extra cash add kiya ho ya cash nikala ho to yahan record karein.
+    Extra cash drawer me dala ho ya drawer se cash nikala ho to yahan record karein.
 </p>
 
 <form action="/cash-movement" method="post" class="row">
@@ -547,6 +540,7 @@
 
 </form>
 
+
 {% elif bd and bd.closed %}
 
 <div class="notice">
@@ -556,9 +550,7 @@
     Difference ₹{{ "%.2f"|format(bd.cash_diff or 0) }}
 </div>
 
-{% endif %}
-            <h2>🔒 Day Closing</h2><form action="/close-day" method="post" class="panel row"><input name="actual" type="number" step=".01" placeholder="Actual Cash Drawer" required><button>Close Day</button></form>{% elif bd and bd.closed %}<div class="notice">🔒 DAY CLOSED · Expected ₹{{bd.expected_cash}} · Actual ₹{{bd.actual_cash}} · Difference ₹{{bd.cash_diff}}</div>{% endif %}
-</main><script>if("serviceWorker" in navigator){navigator.serviceWorker.register("/service-worker.js").catch(()=>{})}</script><script>
+{% endif %}</main><script>if("serviceWorker" in navigator){navigator.serviceWorker.register("/service-worker.js").catch(()=>{})}</script><script>
 let deferredPrompt=null;
 const installBtn=document.getElementById("installApp"),net=document.getElementById("netState");
 window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;installBtn.style.display="inline-block"});
