@@ -1058,5 +1058,63 @@ def day_history():
         "day_history.html",
         days=days
     )
+@app.get("/day-report/<day>")
+def day_report(day):
+    if not logged():
+        return redirect("/")
+
+    if session.get("role") != "Owner":
+        return "Owner access required", 403
+
+    c = db()
+
+    business_day = c.execute(
+        "SELECT * FROM business_days WHERE day=?",
+        (day,)
+    ).fetchone()
+
+    if not business_day:
+        c.close()
+        return "Business day not found", 404
+
+    transactions = c.execute(
+        "SELECT * FROM transactions WHERE day=? ORDER BY id DESC",
+        (day,)
+    ).fetchall()
+
+    expenses = c.execute(
+        "SELECT * FROM expenses WHERE day=? ORDER BY id DESC",
+        (day,)
+    ).fetchall()
+
+    purchases = c.execute(
+        "SELECT * FROM purchases WHERE day=? ORDER BY id DESC",
+        (day,)
+    ).fetchall()
+
+    supplier_payments = c.execute(
+        "SELECT * FROM supplier_payments WHERE LEFT(ts,10)=? ORDER BY id DESC",
+        (day,)
+    ).fetchall()
+
+    cash_movements = c.execute(
+        "SELECT * FROM cash_movements WHERE day=? ORDER BY id DESC",
+        (day,)
+    ).fetchall()
+
+    c.close()
+
+    return render_template(
+        "day_report.html",
+        day=day,
+        business_day=business_day,
+        transactions=transactions,
+        expenses=expenses,
+        purchases=purchases,
+        supplier_payments=supplier_payments,
+        cash_movements=cash_movements
+    )
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=False)
