@@ -525,15 +525,28 @@ def close_day():
     """,
     (d,)
 ).fetchone()["s"]
+    cash_added = c.execute(
+        """SELECT COALESCE(SUM(amount),0) AS s
+           FROM cash_movements
+           WHERE day=? AND kind='Cash Added'""",
+        (d,)
+    ).fetchone()["s"]
 
-    expected = (
+    cash_withdrawn = c.execute(
+        """SELECT COALESCE(SUM(amount),0) AS s
+           FROM cash_movements
+           WHERE day=? AND kind='Cash Withdrawn'""",
+        (d,)
+    ).fetchone()["s"]
+        expected = (
         bd["opening_cash"]
         + cashsales
+        + cash_added
         - cashexp
         - cashpur
         - cash_supplier_payments
+        - cash_withdrawn
     )
-
     actual = float(request.form["actual"])
     difference = actual - expected
 
