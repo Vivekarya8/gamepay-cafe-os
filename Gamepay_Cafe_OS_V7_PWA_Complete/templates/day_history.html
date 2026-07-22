@@ -45,6 +45,12 @@
     <th>Actual Cash</th>
 
     <th>Cash Difference</th>
+    <th>Details</th>
+    <td>
+        <a class="btn" href="/day-report/{{ d.day }}">
+            📋 View Details
+        </a>
+    </td>
 </tr>
 
 {% for d in days %}
@@ -210,7 +216,7 @@
 
 <tr>
 
-    <td colspan="12">
+    <td colspan="13">
         No business day history found.
     </td>
 
