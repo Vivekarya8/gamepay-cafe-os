@@ -298,48 +298,7 @@ def customer():
 @app.post("/recovery")
 def recovery():
     if not logged():return redirect("/")
-    c=db();name=request.form["name"];amt=float(request.form["amount"]);mode=request.form["mode"];c.execute(("UPDATE customers SET due=GREATEST(0,due-?) WHERE name=?" if DATABASE_URL else "UPDATE customers SET due=MAX(0,due-?) WHERE name=?"),(amt,name));c.execute("INSERT INTO transactions(ts,day,type,detail,mode,customer,amount,cost,app_user) VALUES(?,?,?,?,?,?,?,?,?)",(datetime.now().isoformat(timespec="seconds"),str(date.today()),"Recovery","Udhar recovery",mode,name,amt,0,session["name"]));c.commit();c.close();audit("RECOVERY",f"{name} {amt}");return redirect("/dashboard")
-@app.post("/cash-movement")
-def cash_movement():
-    if not logged():
-        return redirect("/")
-
-    if session.get("role") != "Owner":
-        return "Owner access required", 403
-
-    kind = request.form.get("kind", "").strip()
-    amount = float(request.form.get("amount", 0))
-    note = request.form.get("note", "").strip()
-
-    if kind not in ("Cash Added", "Cash Withdrawn"):
-        return "Invalid cash movement", 400
-
-    if amount <= 0:
-        return "Amount must be greater than zero", 400
-
-    c = db()
-
-    c.execute(
-        """INSERT INTO cash_movements
-        (ts, day, kind, amount, note, app_user)
-        VALUES (?, ?, ?, ?, ?, ?)""",
-        (
-            datetime.now().isoformat(timespec="seconds"),
-            str(date.today()),
-            kind,
-            amount,
-            note,
-            session["name"]
-        )
-    )
-
-    c.commit()
-    c.close()
-
-    audit("CASH MOVEMENT", f"{kind} ₹{amount} - {note}")
-
-    return redirect("/dashboard")
-    
+    c=db();name=request.form["name"];amt=float(request.form["amount"]);mode=request.form["mode"];c.execute(("UPDATE customers SET due=GREATEST(0,due-?) WHERE name=?" if DATABASE_URL else "UPDATE customers SET due=MAX(0,due-?) WHERE name=?"),(amt,name));c.execute("INSERT INTO transactions(ts,day,type,detail,mode,customer,amount,cost,app_user) VALUES(?,?,?,?,?,?,?,?,?)",(datetime.now().isoformat(timespec="seconds"),str(date.today()),"Recovery","Udhar recovery",mode,name,amt,0,session["name"]));c.commit();c.close();audit("RECOVERY",f"{name} {amt}");return redirect("/dashboard")  
 @app.post("/expense")
 def expense():
     if not logged():return redirect("/")
