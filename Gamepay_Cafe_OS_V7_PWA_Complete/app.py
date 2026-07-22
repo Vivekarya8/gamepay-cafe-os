@@ -512,8 +512,7 @@ def close_day():
         c.close()
         return "Day not open", 400
 
-    # CASH IN:
-    # Product sales + Gaming sales + Udhar recoveries received in Cash
+    # Cash Product + Gaming + Udhar Recovery
     cashsales = c.execute(
         """
         SELECT COALESCE(SUM(amount),0) AS s
@@ -526,49 +525,63 @@ def close_day():
         (d,)
     ).fetchone()["s"]
 
-    # CASH OUT: Expenses
+    # Cash Expenses
     cashexp = c.execute(
         """
         SELECT COALESCE(SUM(amount),0) AS s
         FROM expenses
-        WHERE day=? AND mode='Cash'
+        WHERE day=?
+          AND mode='Cash'
         """,
         (d,)
     ).fetchone()["s"]
 
-    # CASH OUT: Stock purchases paid immediately in Cash
+    # Cash Stock Purchases
     cashpur = c.execute(
         """
         SELECT COALESCE(SUM(total),0) AS s
         FROM purchases
-        WHERE day=? AND mode='Cash'
+        WHERE day=?
+          AND mode='Cash'
         """,
         (d,)
     ).fetchone()["s"]
 
-    # CASH OUT: Payments made to suppliers in Cash
+    # Cash Supplier Payments
     cash_supplier_payments = c.execute(
-    """
-    SELECT COALESCE(SUM(amount),0) AS s
-    FROM supplier_payments
-    WHERE LEFT(ts,10)=? AND mode='Cash'
-    """,
-    (d,)
-).fetchone()["s"]
-    cash_added = c.execute(
-        """SELECT COALESCE(SUM(amount),0) AS s
-           FROM cash_movements
-           WHERE day=? AND kind='Cash Added'""",
+        """
+        SELECT COALESCE(SUM(amount),0) AS s
+        FROM supplier_payments
+        WHERE LEFT(ts,10)=?
+          AND mode='Cash'
+        """,
         (d,)
     ).fetchone()["s"]
 
-    cash_withdrawn = c.execute(
-        """SELECT COALESCE(SUM(amount),0) AS s
-           FROM cash_movements
-           WHERE day=? AND kind='Cash Withdrawn'""",
+    # Extra Cash Added to Drawer
+    cash_added = c.execute(
+        """
+        SELECT COALESCE(SUM(amount),0) AS s
+        FROM cash_movements
+        WHERE day=?
+          AND kind='Cash Added'
+        """,
         (d,)
     ).fetchone()["s"]
-        expected = (
+
+    # Cash Withdrawn from Drawer
+    cash_withdrawn = c.execute(
+        """
+        SELECT COALESCE(SUM(amount),0) AS s
+        FROM cash_movements
+        WHERE day=?
+          AND kind='Cash Withdrawn'
+        """,
+        (d,)
+    ).fetchone()["s"]
+
+    # Final Expected Physical Cash
+    expected = (
         bd["opening_cash"]
         + cashsales
         + cash_added
@@ -577,6 +590,7 @@ def close_day():
         - cash_supplier_payments
         - cash_withdrawn
     )
+
     actual = float(request.form["actual"])
     difference = actual - expected
 
@@ -589,7 +603,12 @@ def close_day():
             cash_diff=?
         WHERE day=?
         """,
-        (expected, actual, difference, d)
+        (
+            expected,
+            actual,
+            difference,
+            d
+        )
     )
 
     c.commit()
@@ -600,8 +619,7 @@ def close_day():
         f"Expected {expected}, Actual {actual}, Difference {difference}"
     )
 
-    return redirect("/dashboard")
-@app.post("/session/start")
+    return redirect("/dashboard")@app.post("/session/start")
 def session_start():
     if not logged():return redirect("/")
     c=db()
