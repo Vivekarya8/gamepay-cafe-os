@@ -189,16 +189,30 @@ def dashboard():
         FROM supplier_payments
         WHERE LEFT(ts,10)=? AND mode='Cash'
     """,(d,)).fetchone()["s"]
+    cash_added = c.execute(
+    """SELECT COALESCE(SUM(amount),0) s
+       FROM cash_movements
+       WHERE day=? AND kind='Cash Added'""",
+    (d,)
+).fetchone()["s"]
+
+cash_withdrawn = c.execute(
+    """SELECT COALESCE(SUM(amount),0) s
+       FROM cash_movements
+       WHERE day=? AND kind='Cash Withdrawn'""",
+    (d,)
+).fetchone()["s"]
 
     expected_cash = (
-        opening_cash
-        + cash_sales
-        + cash_recovery
-        - cash_expenses
-        - cash_purchases
-        - cash_supplier_payments
-    )
-    running=c.execute("SELECT * FROM gaming_sessions WHERE status='RUNNING'").fetchall()
+    opening_cash
+    + cash_sales
+    + cash_recovery
+    + cash_added
+    - cash_expenses
+    - cash_purchases
+    - cash_supplier_payments
+    - cash_withdrawn
+)    running=c.execute("SELECT * FROM gaming_sessions WHERE status='RUNNING'").fetchall()
     movements=c.execute("SELECT * FROM inventory_movements ORDER BY id DESC LIMIT 20").fetchall()
     suppliers=c.execute("""SELECT supplier,
       COALESCE(SUM(CASE WHEN mode='Supplier Udhar' THEN total ELSE 0 END),0) credit
@@ -207,7 +221,7 @@ def dashboard():
     daily=c.execute("""SELECT day,COALESCE(SUM(amount),0) sales FROM transactions
       WHERE status='ACTIVE' AND type IN('Product','Gaming') GROUP BY day ORDER BY day DESC LIMIT 30""").fetchall()
     c.close()
-    return render_template("dashboard.html",total=total,cost=cost,exp=exp,profit=total-cost-exp,due=due,products=products,customers=customers,stations=stations,recent=recent,bd=bd,running=running,movements=movements,suppliers=suppliers,supplier_paid=supplier_paid,daily=daily,opening_cash=opening_cash,cash_sales=cash_sales,cash_recovery=cash_recovery,cash_expenses=cash_expenses,cash_purchases=cash_purchases,cash_supplier_payments=cash_supplier_payments,expected_cash=expected_cash)
+    return render_template("dashboard.html",total=total,cost=cost,exp=exp,profit=total-cost-exp,due=due,products=products,customers=customers,stations=stations,recent=recent,bd=bd,running=running,movements=movements,suppliers=suppliers,supplier_paid=supplier_paid,daily=daily,opening_cash=opening_cash,cash_sales=cash_sales,cash_recovery=cash_recovery,cash_expenses=cash_expenses,cash_purchases=cash_purchases,cash_supplier_payments=cash_supplier_payments,cash_added=cash_added,cash_withdrawn=cash_withdrawn,expected_cash=expected_cash)
 @app.post("/open-day")
 def open_day():
     if not logged():return redirect("/")
@@ -255,6 +269,47 @@ def customer():
 def recovery():
     if not logged():return redirect("/")
     c=db();name=request.form["name"];amt=float(request.form["amount"]);mode=request.form["mode"];c.execute(("UPDATE customers SET due=GREATEST(0,due-?) WHERE name=?" if DATABASE_URL else "UPDATE customers SET due=MAX(0,due-?) WHERE name=?"),(amt,name));c.execute("INSERT INTO transactions(ts,day,type,detail,mode,customer,amount,cost,app_user) VALUES(?,?,?,?,?,?,?,?,?)",(datetime.now().isoformat(timespec="seconds"),str(date.today()),"Recovery","Udhar recovery",mode,name,amt,0,session["name"]));c.commit();c.close();audit("RECOVERY",f"{name} {amt}");return redirect("/dashboard")
+@app.post("/cash-movement")
+def cash_movement():
+    if not logged():
+        return redirect("/")
+
+    if session.get("role") != "Owner":
+        return "Owner access required", 403
+
+    kind = request.form.get("kind", "").strip()
+    amount = float(request.form.get("amount", 0))
+    note = request.form.get("note", "").strip()
+
+    if kind not in ("Cash Added", "Cash Withdrawn"):
+        return "Invalid cash movement", 400
+
+    if amount <= 0:
+        return "Amount must be greater than zero", 400
+
+    c = db()
+
+    c.execute(
+        """INSERT INTO cash_movements
+        (ts, day, kind, amount, note, app_user)
+        VALUES (?, ?, ?, ?, ?, ?)""",
+        (
+            datetime.now().isoformat(timespec="seconds"),
+            str(date.today()),
+            kind,
+            amount,
+            note,
+            session["name"]
+        )
+    )
+
+    c.commit()
+    c.close()
+
+    audit("CASH MOVEMENT", f"{kind} ₹{amount} - {note}")
+
+    return redirect("/dashboard")
+    
 @app.post("/expense")
 def expense():
     if not logged():return redirect("/")
