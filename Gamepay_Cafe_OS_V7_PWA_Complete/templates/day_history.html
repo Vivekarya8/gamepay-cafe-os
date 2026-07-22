@@ -1,23 +1,28 @@
 <!doctype html>
 <html>
+
 <head>
     <link rel="stylesheet" href="/static/style.css">
     <meta name="viewport" content="width=device-width">
-    <title>Day History - Gamepay Cafe</title>
+    <title>Daily Business Report - Gamepay Cafe</title>
 </head>
 
 <body>
 
 <header>
-    <b>📅 Day History</b>
+    <b>📊 GAMEPAY CAFE — DAILY BUSINESS REPORT</b>
     <a href="/dashboard">← Dashboard</a>
 </header>
 
 <main>
 
-<h1>📊 Daily Closing History</h1>
+<h1>📅 Daily Business History</h1>
 
 <div class="panel">
+
+<p>
+    Sales, profit, udhar activity aur daily cash closing ka complete summary.
+</p>
 
 <div style="overflow-x:auto;">
 
@@ -26,13 +31,32 @@
 <tr>
     <th>Date</th>
     <th>Status</th>
+
+    <th>Sales</th>
+    <th>COGS</th>
+    <th>Expenses</th>
+    <th>Est. Net Profit</th>
+
+    <th>Udhar Sales</th>
+    <th>Recovery</th>
+
     <th>Opening Cash</th>
     <th>Expected Cash</th>
     <th>Actual Cash</th>
-    <th>Difference</th>
+
+    <th>Cash Difference</th>
 </tr>
 
 {% for d in days %}
+
+{% set sales = d.sales or 0 %}
+{% set cogs = d.cogs or 0 %}
+{% set expenses = d.expenses or 0 %}
+{% set profit = sales - cogs - expenses %}
+
+{% set udhar = d.udhar_sales or 0 %}
+{% set recovery = d.recovery or 0 %}
+{% set diff = d.cash_diff or 0 %}
 
 <tr>
 
@@ -40,51 +64,156 @@
         <b>{{ d.day }}</b>
     </td>
 
+
     <td>
+
         {% if d.closed %}
+
             🔒 CLOSED
+
         {% else %}
+
             🟢 OPEN
+
         {% endif %}
+
     </td>
+
+
+    <td>
+        <b>₹{{ "%.2f"|format(sales) }}</b>
+    </td>
+
+
+    <td>
+        ₹{{ "%.2f"|format(cogs) }}
+    </td>
+
+
+    <td>
+        ₹{{ "%.2f"|format(expenses) }}
+    </td>
+
+
+    <td>
+
+        {% if profit >= 0 %}
+
+            <b>🟢 ₹{{ "%.2f"|format(profit) }}</b>
+
+        {% else %}
+
+            <b>🔴 ₹{{ "%.2f"|format(profit) }}</b>
+
+        {% endif %}
+
+    </td>
+
+
+    <td>
+
+        {% if udhar > 0 %}
+
+            <b>🟠 ₹{{ "%.2f"|format(udhar) }}</b>
+
+        {% else %}
+
+            ₹0.00
+
+        {% endif %}
+
+    </td>
+
+
+    <td>
+
+        {% if recovery > 0 %}
+
+            <b>🟢 ₹{{ "%.2f"|format(recovery) }}</b>
+
+        {% else %}
+
+            ₹0.00
+
+        {% endif %}
+
+    </td>
+
 
     <td>
         ₹{{ "%.2f"|format(d.opening_cash or 0) }}
     </td>
 
-    <td>
-        ₹{{ "%.2f"|format(d.expected_cash or 0) }}
-    </td>
 
     <td>
-        ₹{{ "%.2f"|format(d.actual_cash or 0) }}
-    </td>
 
-    <td>
-        {% set diff = d.cash_diff or 0 %}
+        {% if d.closed %}
 
-        {% if diff < 0 %}
-            <b>🔴 ₹{{ "%.2f"|format(diff) }}</b>
-            <br><small>Cash Short</small>
-
-        {% elif diff > 0 %}
-            <b>🟠 +₹{{ "%.2f"|format(diff) }}</b>
-            <br><small>Cash Extra</small>
+            ₹{{ "%.2f"|format(d.expected_cash or 0) }}
 
         {% else %}
-            <b>🟢 ₹0.00</b>
-            <br><small>Perfect</small>
+
+            <small>Day Running</small>
+
         {% endif %}
+
+    </td>
+
+
+    <td>
+
+        {% if d.closed %}
+
+            ₹{{ "%.2f"|format(d.actual_cash or 0) }}
+
+        {% else %}
+
+            <small>Not Closed</small>
+
+        {% endif %}
+
+    </td>
+
+
+    <td>
+
+        {% if not d.closed %}
+
+            🟢 RUNNING
+
+        {% elif diff < 0 %}
+
+            <b>🔴 ₹{{ "%.2f"|format(diff) }}</b>
+            <br>
+            <small>Cash Short</small>
+
+        {% elif diff > 0 %}
+
+            <b>🟠 +₹{{ "%.2f"|format(diff) }}</b>
+            <br>
+            <small>Cash Extra</small>
+
+        {% else %}
+
+            <b>🟢 ₹0.00</b>
+            <br>
+            <small>Perfect</small>
+
+        {% endif %}
+
     </td>
 
 </tr>
 
+
 {% else %}
 
 <tr>
-    <td colspan="6">
+
+    <td colspan="12">
         No business day history found.
     </td>
+
 </tr>
 
 {% endfor %}
