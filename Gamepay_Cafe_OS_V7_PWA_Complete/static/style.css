@@ -1515,3 +1515,210 @@ html{
     margin:0;
   }
 }
+/* =========================================================
+   GAMEPAY CAFE OS — STAGE 2D
+   DASHBOARD HERO + MANAGEMENT TOOLS
+   ========================================================= */
+
+.gp-dashboard-hero{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:28px;
+
+  margin:18px 0 22px;
+  padding:24px 26px;
+
+  border:1px solid rgba(99,117,170,.22);
+  border-radius:18px;
+
+  background:
+    radial-gradient(circle at 0% 0%,
+      rgba(113,82,255,.13),
+      transparent 35%),
+    radial-gradient(circle at 100% 100%,
+      rgba(22,201,220,.07),
+      transparent 32%),
+    rgba(15,24,47,.55);
+
+  box-shadow:
+    0 18px 45px rgba(0,0,0,.12);
+}
+
+/* HERO COPY */
+
+.gp-hero-copy{
+  min-width:280px;
+  flex:1;
+}
+
+.gp-eyebrow{
+  margin-bottom:8px;
+
+  font-size:10px;
+  font-weight:850;
+  letter-spacing:2px;
+
+  color:#8171ff;
+}
+
+.gp-hero-copy h1{
+  margin:0;
+
+  font-size:clamp(25px,2.4vw,38px);
+  line-height:1.08;
+
+  color:#f7f8ff;
+}
+
+.gp-hero-copy p{
+  max-width:600px;
+
+  margin:10px 0 0;
+
+  color:#8290ad;
+
+  font-size:13px;
+  line-height:1.6;
+}
+
+/* MANAGEMENT TOOLS */
+
+.gp-management-tools{
+  min-width:440px;
+}
+
+.gp-tools-label{
+  display:block;
+
+  margin:0 0 8px 3px;
+
+  font-size:9px;
+  font-weight:850;
+  letter-spacing:1.7px;
+
+  color:#5f6e8b;
+}
+
+.gp-tool-actions{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+}
+
+.gp-tool-btn{
+  min-height:66px;
+
+  display:flex;
+  align-items:center;
+  gap:9px;
+
+  padding:10px 11px;
+
+  text-decoration:none;
+
+  border-radius:12px;
+
+  color:#dfe5f5;
+
+  background:
+    rgba(9,16,33,.60);
+
+  border:
+    1px solid rgba(94,112,164,.24);
+
+  transition:
+    transform .18s ease,
+    border-color .18s ease,
+    background .18s ease;
+}
+
+.gp-tool-btn > span{
+  width:30px;
+  height:30px;
+
+  flex:0 0 30px;
+
+  display:grid;
+  place-items:center;
+
+  border-radius:9px;
+
+  font-size:15px;
+
+  color:#9b8cff;
+
+  background:
+    rgba(115,83,255,.10);
+
+  border:
+    1px solid rgba(115,83,255,.15);
+}
+
+.gp-tool-btn small{
+  display:block;
+
+  font-size:7px;
+  font-weight:750;
+  letter-spacing:1px;
+
+  color:#5f6d89;
+}
+
+.gp-tool-btn b{
+  display:block;
+
+  margin-top:3px;
+
+  font-size:11px;
+
+  color:#dce3f5;
+}
+
+.gp-tool-btn:hover{
+  transform:translateY(-2px);
+
+  border-color:
+    rgba(120,94,255,.45);
+
+  background:
+    rgba(26,34,67,.72);
+}
+
+/* RESPONSIVE */
+
+@media(max-width:1200px){
+
+  .gp-dashboard-hero{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .gp-management-tools{
+    width:100%;
+    min-width:0;
+  }
+}
+
+@media(max-width:700px){
+
+  .gp-dashboard-hero{
+    padding:18px;
+    margin-top:12px;
+  }
+
+  .gp-tool-actions{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .gp-hero-copy h1{
+    font-size:25px;
+  }
+}
+
+@media(max-width:420px){
+
+  .gp-tool-actions{
+    grid-template-columns:1fr;
+  }
+}
