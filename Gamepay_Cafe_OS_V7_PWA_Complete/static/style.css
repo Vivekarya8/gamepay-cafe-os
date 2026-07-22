@@ -874,3 +874,408 @@ main h2:nth-of-type(even)::before{
   }
 
 }
+/* =========================================================
+   GAMEPAY CAFE OS — STAGE 2
+   COMMAND CENTER SIDEBAR
+   ========================================================= */
+
+:root{
+  --gp-sidebar-width:245px;
+}
+
+/* SIDEBAR */
+
+.gp-sidebar{
+  position:fixed;
+  left:0;
+  top:0;
+  bottom:0;
+  width:var(--gp-sidebar-width);
+  z-index:1000;
+
+  display:flex;
+  flex-direction:column;
+
+  background:
+    radial-gradient(circle at 20% 0%,
+      rgba(115,82,255,.16),
+      transparent 28%),
+    linear-gradient(
+      180deg,
+      #0b1020 0%,
+      #080d19 55%,
+      #070b14 100%
+    );
+
+  border-right:1px solid rgba(112,91,230,.25);
+
+  box-shadow:
+    15px 0 45px rgba(0,0,0,.25);
+
+  padding:20px 14px;
+  overflow-y:auto;
+}
+
+/* BRAND */
+
+.gp-brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+
+  min-height:64px;
+  padding:8px 10px 20px;
+
+  border-bottom:1px solid rgba(255,255,255,.07);
+
+  margin-bottom:18px;
+}
+
+.gp-brand-icon{
+  width:43px;
+  height:43px;
+
+  display:grid;
+  place-items:center;
+
+  border-radius:13px;
+
+  font-size:22px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(119,87,255,.25),
+      rgba(34,215,232,.10)
+    );
+
+  border:1px solid rgba(125,102,255,.32);
+
+  box-shadow:
+    0 0 22px rgba(115,82,255,.12);
+}
+
+.gp-brand strong{
+  display:block;
+
+  font-size:17px;
+  font-weight:900;
+
+  letter-spacing:1px;
+
+  color:white;
+}
+
+.gp-brand span{
+  display:block;
+
+  margin-top:3px;
+
+  font-size:11px;
+  font-weight:700;
+
+  letter-spacing:3px;
+
+  color:#8996b5;
+}
+
+/* NAVIGATION LABEL */
+
+.gp-nav-label{
+  padding:0 12px;
+  margin:4px 0 8px;
+
+  color:#596784;
+
+  font-size:10px;
+  font-weight:800;
+
+  letter-spacing:1.6px;
+}
+
+.gp-nav-label-inner{
+  margin-top:22px;
+}
+
+/* NAV */
+
+.gp-nav{
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+}
+
+.gp-nav a{
+  min-height:46px;
+
+  display:flex;
+  align-items:center;
+
+  gap:12px;
+
+  padding:10px 13px;
+
+  border-radius:11px;
+
+  color:#aab5cf;
+
+  text-decoration:none;
+
+  font-size:14px;
+  font-weight:650;
+
+  border:1px solid transparent;
+
+  transition:.2s ease;
+}
+
+.gp-nav a > span{
+  width:23px;
+
+  display:inline-flex;
+  justify-content:center;
+
+  font-size:16px;
+}
+
+.gp-nav a:hover{
+  color:white;
+
+  background:
+    rgba(116,87,255,.10);
+
+  border-color:
+    rgba(116,87,255,.20);
+
+  transform:translateX(3px);
+}
+
+.gp-nav a.active{
+  color:white;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(112,81,246,.24),
+      rgba(112,81,246,.07)
+    );
+
+  border:
+    1px solid rgba(126,103,255,.25);
+
+  box-shadow:
+    inset 3px 0 #795cff,
+    0 7px 20px rgba(0,0,0,.12);
+}
+
+/* SIDEBAR BOTTOM */
+
+.gp-sidebar-bottom{
+  margin-top:auto;
+
+  padding-top:18px;
+}
+
+.gp-system-status{
+  display:flex;
+  align-items:center;
+
+  gap:10px;
+
+  padding:12px;
+
+  border-radius:12px;
+
+  background:
+    rgba(255,255,255,.025);
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  margin-bottom:10px;
+}
+
+.gp-live-dot{
+  width:9px;
+  height:9px;
+
+  flex:0 0 9px;
+
+  border-radius:50%;
+
+  background:#3de5a4;
+
+  box-shadow:
+    0 0 8px #3de5a4,
+    0 0 17px rgba(61,229,164,.50);
+}
+
+.gp-system-status b{
+  display:block;
+
+  font-size:12px;
+
+  color:#dce4f8;
+}
+
+.gp-system-status small{
+  display:block;
+
+  margin-top:2px;
+
+  color:#697795;
+
+  font-size:9px;
+}
+
+.gp-logout{
+  display:block;
+
+  padding:10px 13px;
+
+  color:#8f9bb7;
+
+  text-decoration:none;
+
+  font-size:12px;
+
+  border-radius:9px;
+}
+
+.gp-logout:hover{
+  color:#ff8798;
+
+  background:
+    rgba(255,80,110,.06);
+}
+
+/* =========================================================
+   SHIFT EXISTING APP TO RIGHT
+   ========================================================= */
+
+body > header{
+  margin-left:var(--gp-sidebar-width);
+  width:calc(100% - var(--gp-sidebar-width));
+}
+
+body > main{
+  margin-left:var(--gp-sidebar-width);
+  max-width:none;
+  width:calc(100% - var(--gp-sidebar-width));
+}
+
+/* prevent anchor sections hiding behind header */
+
+html{
+  scroll-behavior:smooth;
+}
+
+[id]{
+  scroll-margin-top:100px;
+}
+
+/* MOBILE MENU BUTTON */
+
+.gp-mobile-menu{
+  display:none;
+
+  position:fixed;
+
+  left:13px;
+  top:12px;
+
+  z-index:1200;
+
+  width:42px;
+  height:42px;
+
+  padding:0;
+  margin:0;
+
+  border-radius:11px;
+
+  font-size:20px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #7657ff,
+      #5540d9
+    );
+
+  box-shadow:
+    0 8px 25px rgba(0,0,0,.35);
+}
+
+/* =========================================================
+   TABLET / MOBILE
+   ========================================================= */
+
+@media(max-width:1050px){
+
+  .gp-sidebar{
+    width:220px;
+  }
+
+  :root{
+    --gp-sidebar-width:220px;
+  }
+
+}
+
+@media(max-width:800px){
+
+  :root{
+    --gp-sidebar-width:0px;
+  }
+
+  .gp-sidebar{
+    width:255px;
+
+    transform:translateX(-105%);
+
+    transition:
+      transform .25s ease;
+
+    box-shadow:
+      20px 0 60px rgba(0,0,0,.55);
+  }
+
+  .gp-sidebar.open{
+    transform:translateX(0);
+  }
+
+  .gp-mobile-menu{
+    display:block;
+  }
+
+  body > header{
+    margin-left:0;
+    width:100%;
+
+    padding-left:68px;
+  }
+
+  body > main{
+    margin-left:0;
+    width:100%;
+  }
+
+}
+
+/* =========================================================
+   SIDEBAR SCROLLBAR
+   ========================================================= */
+
+.gp-sidebar::-webkit-scrollbar{
+  width:5px;
+}
+
+.gp-sidebar::-webkit-scrollbar-track{
+  background:transparent;
+}
+
+.gp-sidebar::-webkit-scrollbar-thumb{
+  background:#293557;
+  border-radius:10px;
+}
