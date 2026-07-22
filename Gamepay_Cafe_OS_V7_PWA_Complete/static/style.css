@@ -1279,3 +1279,239 @@ html{
   background:#293557;
   border-radius:10px;
 }
+/* =========================================================
+   GAMEPAY CAFE OS — STAGE 2C
+   PREMIUM COMMAND BAR
+   ========================================================= */
+
+.gp-command-bar{
+  min-height:84px;
+  padding:14px 28px;
+
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(10,15,31,.98),
+      rgba(10,18,35,.96)
+    );
+
+  border-bottom:1px solid rgba(108,91,210,.22);
+}
+
+.gp-command-title{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+
+.gp-command-title small{
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:2.5px;
+  color:#657493;
+}
+
+.gp-command-title strong{
+  font-size:20px;
+  font-weight:900;
+  letter-spacing:.4px;
+  color:#f5f7ff;
+}
+
+/* RIGHT SIDE */
+
+.gp-command-right{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:10px;
+}
+
+/* DAY STATUS */
+
+.gp-day-status{
+  min-height:48px;
+
+  display:flex;
+  align-items:center;
+  gap:10px;
+
+  padding:7px 14px;
+
+  border-radius:12px;
+
+  background:rgba(255,255,255,.025);
+  border:1px solid rgba(255,255,255,.07);
+}
+
+.gp-day-status small{
+  display:block;
+
+  font-size:8px;
+  letter-spacing:1.3px;
+  color:#657493;
+
+  margin-bottom:2px;
+}
+
+.gp-day-status b{
+  display:block;
+  font-size:12px;
+  color:#eaf0ff;
+}
+
+.gp-status-closed{
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  background:#ff637c;
+
+  box-shadow:
+    0 0 8px rgba(255,99,124,.8);
+}
+
+/* USER CHIP */
+
+.gp-user-chip{
+  min-height:48px;
+
+  display:flex;
+  align-items:center;
+  gap:9px;
+
+  padding:6px 13px 6px 7px;
+
+  border-radius:12px;
+
+  background:rgba(255,255,255,.025);
+  border:1px solid rgba(255,255,255,.07);
+}
+
+.gp-user-avatar{
+  width:34px;
+  height:34px;
+
+  display:grid;
+  place-items:center;
+
+  border-radius:10px;
+
+  font-size:13px;
+  font-weight:900;
+
+  color:white;
+
+  background:
+    linear-gradient(
+      135deg,
+      #7657ff,
+      #4b3ac8
+    );
+
+  box-shadow:
+    0 6px 18px rgba(89,66,220,.25);
+}
+
+.gp-user-chip b{
+  display:block;
+  font-size:11px;
+  color:#e9edfa;
+}
+
+.gp-user-chip small{
+  display:block;
+  margin-top:2px;
+  font-size:9px;
+  color:#71809d;
+}
+
+/* ONLINE STATUS */
+
+.gp-online-chip{
+  min-height:48px;
+
+  display:flex;
+  align-items:center;
+  gap:8px;
+
+  padding:0 14px;
+
+  border-radius:12px;
+
+  color:#aebbd4;
+  font-size:11px;
+  font-weight:750;
+
+  background:rgba(255,255,255,.025);
+  border:1px solid rgba(255,255,255,.07);
+}
+
+/* INSTALL BUTTON */
+
+.gp-install-btn{
+  min-height:44px;
+  margin:0;
+
+  padding:0 14px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #7354ff,
+      #523bd2
+    );
+
+  font-size:11px;
+  font-weight:800;
+}
+
+/* MOBILE */
+
+@media(max-width:800px){
+
+  .gp-command-bar{
+    min-height:70px;
+    padding:10px 12px 10px 68px;
+  }
+
+  .gp-command-title small{
+    display:none;
+  }
+
+  .gp-command-title strong{
+    font-size:15px;
+  }
+
+  .gp-day-status{
+    display:none;
+  }
+
+  .gp-user-chip{
+    display:none;
+  }
+
+  .gp-online-chip{
+    min-height:40px;
+    padding:0 10px;
+  }
+}
+
+@media(max-width:480px){
+
+  .gp-command-title strong{
+    font-size:13px;
+  }
+
+  .gp-online-chip{
+    font-size:0;
+  }
+
+  .gp-online-chip .gp-live-dot{
+    margin:0;
+  }
+}
