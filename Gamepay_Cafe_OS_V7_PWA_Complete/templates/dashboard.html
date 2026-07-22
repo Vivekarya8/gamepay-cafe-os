@@ -9,7 +9,6 @@
 {% if ns.run %}<div class="timer" data-start="{{ns.run.start_ts}}" data-min="{{ns.run.minutes}}">Calculating...</div><small>{{ns.run.label}} · ₹{{ns.run.price}}</small>
 <form action="/session/stop" method="post"><input type="hidden" name="station" value="{{s.id}}"><select name="mode"><option>Cash</option><option>UPI</option><option>Udhar</option></select><select name="customer">
     <option value="">Select Udhar Customer</option>
-
     {% for c in customers %}
         {% if c.approved %}
 
