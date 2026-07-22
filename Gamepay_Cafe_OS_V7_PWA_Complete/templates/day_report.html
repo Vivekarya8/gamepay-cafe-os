@@ -1,0 +1,259 @@
+<!doctype html>
+<html>
+<head>
+    <link rel="stylesheet" href="/static/style.css">
+    <meta name="viewport" content="width=device-width">
+    <title>Day Report - Gamepay Cafe</title>
+</head>
+
+<body>
+
+<header>
+    <b>📋 DAY REPORT — {{ day }}</b>
+    <a href="/day-history">← Day History</a>
+    <a href="/dashboard">Dashboard</a>
+</header>
+
+<main>
+
+<h1>📊 Business Report — {{ day }}</h1>
+
+<div class="metrics">
+
+    <div>
+        <small>Opening Cash</small>
+        <b>₹{{ "%.2f"|format(business_day.opening_cash or 0) }}</b>
+    </div>
+
+    <div>
+        <small>Expected Cash</small>
+        <b>₹{{ "%.2f"|format(business_day.expected_cash or 0) }}</b>
+    </div>
+
+    <div>
+        <small>Actual Cash</small>
+        <b>₹{{ "%.2f"|format(business_day.actual_cash or 0) }}</b>
+    </div>
+
+    <div>
+        <small>Cash Difference</small>
+        <b>₹{{ "%.2f"|format(business_day.cash_diff or 0) }}</b>
+    </div>
+
+</div>
+
+
+<h2>💰 Sales / Transactions</h2>
+
+<div class="panel">
+<div style="overflow-x:auto;">
+
+<table>
+
+<tr>
+    <th>Time</th>
+    <th>Type</th>
+    <th>Detail</th>
+    <th>Mode</th>
+    <th>Customer</th>
+    <th>Amount</th>
+    <th>Status</th>
+</tr>
+
+{% for x in transactions %}
+
+<tr>
+    <td>{{ x.ts }}</td>
+    <td>{{ x.type }}</td>
+    <td>{{ x.detail }}</td>
+    <td>{{ x.mode }}</td>
+    <td>{{ x.customer or "-" }}</td>
+    <td>₹{{ "%.2f"|format(x.amount or 0) }}</td>
+    <td>{{ x.status }}</td>
+</tr>
+
+{% else %}
+
+<tr>
+    <td colspan="7">No transactions.</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+</div>
+
+
+<h2>💸 Expenses</h2>
+
+<div class="panel">
+<div style="overflow-x:auto;">
+
+<table>
+
+<tr>
+    <th>Time</th>
+    <th>Category</th>
+    <th>Mode</th>
+    <th>Amount</th>
+    <th>Note</th>
+</tr>
+
+{% for x in expenses %}
+
+<tr>
+    <td>{{ x.ts }}</td>
+    <td>{{ x.category }}</td>
+    <td>{{ x.mode }}</td>
+    <td>₹{{ "%.2f"|format(x.amount or 0) }}</td>
+    <td>{{ x.note or "-" }}</td>
+</tr>
+
+{% else %}
+
+<tr>
+    <td colspan="5">No expenses.</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+</div>
+
+
+<h2>🛒 Stock Purchases</h2>
+
+<div class="panel">
+<div style="overflow-x:auto;">
+
+<table>
+
+<tr>
+    <th>Time</th>
+    <th>Supplier</th>
+    <th>Product</th>
+    <th>Qty</th>
+    <th>Rate</th>
+    <th>Total</th>
+    <th>Mode</th>
+</tr>
+
+{% for x in purchases %}
+
+<tr>
+    <td>{{ x.ts }}</td>
+    <td>{{ x.supplier }}</td>
+    <td>{{ x.product }}</td>
+    <td>{{ x.qty }}</td>
+    <td>₹{{ "%.2f"|format(x.rate or 0) }}</td>
+    <td>₹{{ "%.2f"|format(x.total or 0) }}</td>
+    <td>{{ x.mode }}</td>
+</tr>
+
+{% else %}
+
+<tr>
+    <td colspan="7">No purchases.</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+</div>
+
+
+<h2>🏭 Supplier Payments</h2>
+
+<div class="panel">
+<div style="overflow-x:auto;">
+
+<table>
+
+<tr>
+    <th>Time</th>
+    <th>Supplier</th>
+    <th>Amount</th>
+    <th>Mode</th>
+    <th>Note</th>
+</tr>
+
+{% for x in supplier_payments %}
+
+<tr>
+    <td>{{ x.ts }}</td>
+    <td>{{ x.supplier }}</td>
+    <td>₹{{ "%.2f"|format(x.amount or 0) }}</td>
+    <td>{{ x.mode }}</td>
+    <td>{{ x.note or "-" }}</td>
+</tr>
+
+{% else %}
+
+<tr>
+    <td colspan="5">No supplier payments.</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+</div>
+
+
+<h2>💵 Cash Drawer Movements</h2>
+
+<div class="panel">
+<div style="overflow-x:auto;">
+
+<table>
+
+<tr>
+    <th>Time</th>
+    <th>Type</th>
+    <th>Amount</th>
+    <th>Reason</th>
+    <th>User</th>
+</tr>
+
+{% for x in cash_movements %}
+
+<tr>
+    <td>{{ x.ts }}</td>
+
+    <td>
+        {% if x.kind == "Cash Added" %}
+            ➕ {{ x.kind }}
+        {% else %}
+            ➖ {{ x.kind }}
+        {% endif %}
+    </td>
+
+    <td>₹{{ "%.2f"|format(x.amount or 0) }}</td>
+    <td>{{ x.note or "-" }}</td>
+    <td>{{ x.app_user }}</td>
+</tr>
+
+{% else %}
+
+<tr>
+    <td colspan="5">No cash movements.</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+</div>
+
+</main>
+
+</body>
+</html>
