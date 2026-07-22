@@ -1,4 +1,100 @@
-<!doctype html><html><head><link rel="stylesheet" href="/static/style.css"><meta name="viewport" content="width=device-width"><meta name="theme-color" content="#111a35"><link rel="manifest" href="/manifest.json"></head><body>
+<!doctype html><html><head><link rel="stylesheet" href="/static/style.css"><meta name="viewport" content="width=device-width"><meta name="theme-color" content="#111a35"><link rel="manifest" href="/manifest.json"></head><body><!-- =====================================================
+     GAMEPAY CAFE OS — COMMAND SIDEBAR
+     ===================================================== -->
+
+<aside class="gp-sidebar" id="gpSidebar">
+
+    <div class="gp-brand">
+        <div class="gp-brand-icon">🎮</div>
+
+        <div>
+            <strong>GAMEPAY</strong>
+            <span>CAFE OS</span>
+        </div>
+    </div>
+
+    <div class="gp-nav-label">COMMAND CENTER</div>
+
+    <nav class="gp-nav">
+
+        <a href="#top" class="active">
+            <span>◈</span>
+            Dashboard
+        </a>
+
+        <a href="#gaming">
+            <span>🎮</span>
+            Gaming Arena
+        </a>
+
+        <a href="#cafe">
+            <span>☕</span>
+            Café POS
+        </a>
+
+        <a href="#inventory">
+            <span>📦</span>
+            Inventory
+        </a>
+
+        <a href="#udhar">
+            <span>👥</span>
+            Udhar
+        </a>
+
+        <a href="#expenses">
+            <span>💸</span>
+            Expenses
+        </a>
+
+        <a href="#suppliers">
+            <span>🚚</span>
+            Suppliers
+        </a>
+
+        <div class="gp-nav-label gp-nav-label-inner">
+            BUSINESS
+        </div>
+
+        <a href="/day-history">
+            <span>📊</span>
+            Day History
+        </a>
+
+        <a href="/audit">
+            <span>🛡️</span>
+            Audit Log
+        </a>
+
+    </nav>
+
+    <div class="gp-sidebar-bottom">
+
+        <div class="gp-system-status">
+            <span class="gp-live-dot"></span>
+
+            <div>
+                <b>System Online</b>
+                <small>Gamepay Command OS</small>
+            </div>
+        </div>
+
+        <a href="/logout" class="gp-logout">
+            ↪ Logout
+        </a>
+
+    </div>
+
+</aside>
+
+<button
+    class="gp-mobile-menu"
+    onclick="document.getElementById('gpSidebar').classList.toggle('open')"
+    type="button">
+    ☰
+</button>
+
+<div id="top"></div>
 <header><b>🎮 GAMEPAY CAFE OS V4</b><span>{{session.name}} · {{session.role}}</span><button id="installApp" class="btn" style="display:none">📱 Install App</button><span id="netState" class="btn">Online</span><a href="/logout">Logout</a></header><main>
 <div class="row"><h1>Business Control Dashboard</h1>{% if session.role=="Owner" %}<a class="btn" href="/audit">Audit Log</a><a class="btn" href="/day-history">📅 Day History</a><a class="btn" href="/export">CSV</a><a class="btn" href="/excel">Excel Report</a><a class="btn" href="/backup-db">Backup DB</a><a class="btn" href="/cloud-status">Cloud Status</a>{% endif %}</div>
 {% if not bd or bd.closed %}<form action="/open-day" method="post" class="panel row"><input name="opening" type="number" step=".01" placeholder="Opening Cash" required><button>OPEN DAY</button></form>{% else %}<div class="notice">🟢 DAY OPEN · Opening Cash ₹{{"%.2f"|format(bd.opening_cash)}}</div>{% endif %}
