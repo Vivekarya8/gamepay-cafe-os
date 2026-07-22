@@ -5,7 +5,7 @@ from psycopg.rows import dict_row
 from urllib.parse import urlparse
 from pathlib import Path
 from openpyxl import Workbook
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 
 app=Flask(__name__)
 app.secret_key=os.environ.get("GAMEPAY_SECRET", secrets.token_hex(32))
@@ -589,7 +589,7 @@ def session_start():
     sid=int(request.form["station"]);minutes=int(request.form["minutes"]);price=float(request.form["price"]);label=request.form["label"]
     running=c.execute("SELECT 1 FROM gaming_sessions WHERE station_id=? AND status='RUNNING'",(sid,)).fetchone()
     if running:c.close();return "Station already running",400
-    c.execute("INSERT INTO gaming_sessions(station_id,start_ts,minutes,price,label,app_user) VALUES(?,?,?,?,?,?)",(sid,datetime.now().isoformat(timespec="seconds"),minutes,price,label,session["name"]));c.commit();c.close();audit("SESSION START",f"Station {sid} {label}");return redirect("/dashboard")
+    c.execute("INSERT INTO gaming_sessions(station_id,start_ts,minutes,price,label,app_user) VALUES(?,?,?,?,?,?)",(sid,datetime.now(timezone.utc).isoformat(timespec="seconds"),minutes,price,label,session["name"]));c.commit();c.close();audit("SESSION START",f"Station {sid} {label}");return redirect("/dashboard")
 @app.post("/session/stop")
 def session_stop():
     if not logged():return redirect("/")
