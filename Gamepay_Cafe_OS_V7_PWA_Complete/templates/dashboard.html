@@ -487,7 +487,121 @@ setInterval(
 );
 </script>
 
-    <h2>🧾 Product POS</h2><form action="/sale" method="post" class="panel row"><select name="product">{% for p in products %}<option value="{{p.id}}">{{p.name}} · ₹{{p.sell}} · Stock {{p.stock}}</option>{% endfor %}</select><input name="qty" type="number" min="1" value="1"><select name="mode"><option>Cash</option><option>UPI</option><option>Udhar</option></select><select name="customer">
+   <!-- =====================================================
+     GAMEPAY CAFE — GAMING QUICK BILLING
+     ===================================================== -->
+
+<section class="gp-quick-billing" id="quick-billing">
+
+    <div class="gp-section-head">
+        <div>
+            <div class="gp-section-kicker">◈ INSTANT GAME BILLING</div>
+            <h2>⚡ Gaming Quick Billing</h2>
+            <p>Register coin play and direct gaming sessions instantly.</p>
+        </div>
+    </div>
+
+    <div class="gp-quick-grid">
+
+        {% for s in stations %}
+
+        <form action="/gaming"
+              method="post"
+              class="gp-quick-card">
+
+            <div class="gp-quick-card-top">
+
+                <div class="gp-station-number">
+                    {{ "%02d"|format(s.id) }}
+                </div>
+
+                <div>
+                    <small>STATION {{ s.id }}</small>
+                    <h3>{{ s.name }}</h3>
+                </div>
+
+            </div>
+
+            <input type="hidden"
+                   name="station"
+                   value="{{s.id}}">
+
+            <div class="gp-field">
+
+                <label>GAME PACKAGE</label>
+
+                <select name="package" required>
+
+                    {% for r in s.rates.split(",") %}
+                        <option value="{{r}}">
+                            {{r}}
+                        </option>
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+            <div class="gp-field">
+
+                <label>PAYMENT MODE</label>
+
+                <select name="mode" required>
+                    <option value="Cash">Cash</option>
+                    <option value="UPI">UPI</option>
+                    <option value="Udhar">Udhar</option>
+                </select>
+
+            </div>
+
+            <div class="gp-field">
+
+                <label>CUSTOMER</label>
+
+                <select name="customer">
+
+                    <option value="">
+                        Select Udhar Customer
+                    </option>
+
+                    {% for c in customers %}
+
+                        {% if c.approved %}
+
+                            {% set available =
+                                c.credit_limit - c.due %}
+
+                            <option value="{{c.name}}">
+                                {{c.name}}
+                                | Due ₹{{"%.2f"|format(c.due)}}
+                                | Available ₹{{"%.2f"|format(available)}}
+                            </option>
+
+                        {% endif %}
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+            <button type="submit"
+                    class="gp-quick-bill-btn">
+
+                <span>⚡</span>
+                BILL GAMING
+
+            </button>
+
+        </form>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+     
+     <h2>🧾 Product POS</h2><form action="/sale" method="post" class="panel row"><select name="product">{% for p in products %}<option value="{{p.id}}">{{p.name}} · ₹{{p.sell}} · Stock {{p.stock}}</option>{% endfor %}</select><input name="qty" type="number" min="1" value="1"><select name="mode"><option>Cash</option><option>UPI</option><option>Udhar</option></select><select name="customer">
     <option value="">Select Udhar Customer</option>
 
     {% for c in customers %}
