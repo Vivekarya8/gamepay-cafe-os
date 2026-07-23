@@ -2547,3 +2547,16 @@ body > main{
         padding:16px;
     }
 }
+/* QUICK BILLING CUSTOMER FIELD */
+
+.gp-quick-card .gp-customer-field{
+    margin-bottom:13px;
+}
+
+.gp-quick-card .gp-customer-field select{
+    width:100%;
+    min-height:47px;
+}
+
+/* Customer dropdown is controlled by existing
+   Payment Mode JavaScript: Cash/UPI hidden, Udhar visible */
