@@ -503,8 +503,7 @@ setInterval(
 
     <div class="gp-quick-grid">
 
-        {% for s in stations %}
-
+        {% for s in stations if s.type != "time" %}
         <form action="/gaming"
               method="post"
               class="gp-quick-card">
@@ -554,7 +553,7 @@ setInterval(
 
             </div>
 
-            <div class="gp-field">
+            <div class="gp-field gp-customer-field">
 
                 <label>CUSTOMER</label>
 
