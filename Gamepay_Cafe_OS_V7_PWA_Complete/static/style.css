@@ -2560,3 +2560,185 @@ body > main{
 
 /* Customer dropdown is controlled by existing
    Payment Mode JavaScript: Cash/UPI hidden, Udhar visible */
+
+/* =====================================================
+   GAMEPAY CAFE — PREMIUM PRODUCT POS
+   ===================================================== */
+
+.gp-pos-section{
+    margin-top:42px;
+}
+
+.gp-pos-section .gp-section-heading{
+    margin-bottom:20px;
+}
+
+.gp-pos-section .gp-section-heading h2{
+    margin:7px 0 4px;
+    font-size:32px;
+    font-weight:900;
+    letter-spacing:-1px;
+}
+
+.gp-pos-section .gp-section-heading p{
+    margin:0;
+    color:#8f9ab8;
+    font-size:14px;
+}
+
+/* MAIN POS CARD */
+
+.gp-pos-card{
+    display:grid;
+    grid-template-columns:minmax(260px,2fr) 120px 170px minmax(220px,1.4fr) 190px;
+    gap:14px;
+    align-items:end;
+
+    padding:22px;
+    border:1px solid #263b63;
+    border-radius:20px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(20,31,58,.98),
+            rgba(11,22,43,.98)
+        );
+
+    box-shadow:
+        0 18px 45px rgba(0,0,0,.20),
+        inset 0 1px 0 rgba(255,255,255,.025);
+}
+
+/* FIELDS */
+
+.gp-pos-field{
+    min-width:0;
+}
+
+.gp-pos-field label{
+    display:block;
+    margin:0 0 9px 3px;
+
+    color:#7f8cab;
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:1.8px;
+}
+
+.gp-pos-field select,
+.gp-pos-field input{
+    width:100%;
+    height:50px;
+    box-sizing:border-box;
+
+    border:1px solid #2b4169;
+    border-radius:12px;
+
+    background:#071327;
+    color:#f5f7ff;
+
+    padding:0 15px;
+    font-size:14px;
+    outline:none;
+
+    transition:
+        border-color .2s ease,
+        box-shadow .2s ease;
+}
+
+.gp-pos-field select:focus,
+.gp-pos-field input:focus{
+    border-color:#7257ff;
+    box-shadow:0 0 0 3px rgba(114,87,255,.12);
+}
+
+/* QUANTITY */
+
+.gp-pos-qty input{
+    text-align:center;
+    font-weight:800;
+}
+
+/* SALE BUTTON */
+
+.gp-pos-action{
+    min-width:0;
+}
+
+.gp-complete-sale-btn{
+    width:100%;
+    height:50px;
+
+    border:0;
+    border-radius:12px;
+
+    background:linear-gradient(
+        135deg,
+        #7457ff,
+        #5939e7
+    );
+
+    color:white;
+    font-size:13px;
+    font-weight:900;
+    letter-spacing:.3px;
+
+    cursor:pointer;
+
+    box-shadow:
+        0 10px 25px rgba(91,58,230,.28);
+
+    transition:
+        transform .18s ease,
+        box-shadow .18s ease;
+}
+
+.gp-complete-sale-btn:hover{
+    transform:translateY(-2px);
+    box-shadow:
+        0 14px 30px rgba(91,58,230,.38);
+}
+
+.gp-complete-sale-btn span{
+    margin-right:7px;
+}
+
+/* TABLET */
+
+@media(max-width:1200px){
+
+    .gp-pos-card{
+        grid-template-columns:2fr 1fr 1fr;
+    }
+
+    .gp-pos-action{
+        grid-column:span 2;
+    }
+}
+
+/* MOBILE */
+
+@media(max-width:700px){
+
+    .gp-pos-section{
+        margin-top:30px;
+    }
+
+    .gp-pos-section .gp-section-heading h2{
+        font-size:25px;
+    }
+
+    .gp-pos-card{
+        grid-template-columns:1fr;
+        padding:16px;
+    }
+
+    .gp-pos-action{
+        grid-column:auto;
+    }
+
+    .gp-complete-sale-btn{
+        height:54px;
+    }
+}
