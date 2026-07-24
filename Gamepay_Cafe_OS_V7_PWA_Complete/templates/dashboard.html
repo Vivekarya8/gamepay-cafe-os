@@ -600,21 +600,86 @@ setInterval(
 
 </section>
      
-     <h2>🧾 Product POS</h2><form action="/sale" method="post" class="panel row"><select name="product">{% for p in products %}<option value="{{p.id}}">{{p.name}} · ₹{{p.sell}} · Stock {{p.stock}}</option>{% endfor %}</select><input name="qty" type="number" min="1" value="1"><select name="mode"><option>Cash</option><option>UPI</option><option>Udhar</option></select><select name="customer">
-    <option value="">Select Udhar Customer</option>
+     <!-- GAMEPAY PREMIUM PRODUCT POS -->
 
-    {% for c in customers %}
-        {% if c.approved %}
+<section class="gp-pos-section">
 
-        {% set available = c.credit_limit - c.due %}
+    <div class="gp-pos-header">
+        <div class="gp-pos-title-icon">🧾</div>
 
-        <option value="{{c.name}}">
-            {{c.name}} | Due ₹{{"%.2f"|format(c.due)}} | Limit ₹{{"%.2f"|format(c.credit_limit)}} | Available ₹{{"%.2f"|format(available)}}
-        </option>
+        <div>
+            <div class="gp-pos-eyebrow">FAST COUNTER BILLING</div>
+            <h2>Café Product POS</h2>
+            <p>Quickly bill snacks, drinks and café products.</p>
+        </div>
+    </div>
 
-        {% endif %}
-    {% endfor %}
-</select><button>Complete Sale</button></form>
+    <form action="/sale" method="post" class="gp-pos-card">
+
+        <div class="gp-pos-field gp-pos-product">
+            <label>PRODUCT</label>
+
+            <select name="product" required>
+                {% for p in products %}
+                <option value="{{p.id}}">
+                    {{p.name}} · ₹{{p.sell}} · Stock {{p.stock}}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="gp-pos-field gp-pos-qty">
+            <label>QUANTITY</label>
+
+            <input
+                name="qty"
+                type="number"
+                min="1"
+                value="1"
+                required>
+        </div>
+
+        <div class="gp-pos-field gp-pos-payment">
+            <label>PAYMENT MODE</label>
+
+            <select name="mode">
+                <option>Cash</option>
+                <option>UPI</option>
+                <option>Udhar</option>
+            </select>
+        </div>
+
+        <div class="gp-pos-field gp-customer-field">
+            <label>CUSTOMER</label>
+
+            <select name="customer">
+
+                <option value="">Select Udhar Customer</option>
+
+                {% for c in customers %}
+                    {% if c.approved %}
+
+                        {% set available = c.credit_limit - c.due %}
+
+                        <option value="{{c.name}}">
+                            {{c.name}} | Due ₹{{"%.2f"|format(c.due)}} | Available ₹{{"%.2f"|format(available)}}
+                        </option>
+
+                    {% endif %}
+                {% endfor %}
+
+            </select>
+        </div>
+
+        <div class="gp-pos-action">
+            <button type="submit" class="gp-complete-sale-btn">
+                ⚡ COMPLETE SALE
+            </button>
+        </div>
+
+    </form>
+
+</section>
 <div class="twocol"><section><h2>👥 Udhar</h2>{% if session.role=="Owner" %}<form action="/customer" method="post" class="panel"><input name="name" placeholder="Name" required><input name="mobile" placeholder="Mobile"><input name="limit" type="number" placeholder="Credit Limit"><button>Approve Customer</button></form>{% endif %}<form action="/recovery" method="post" class="panel"><select name="name">{% for c in customers %}<option>{{c.name}}</option>{% endfor %}</select><input name="amount" type="number" step=".01" placeholder="Recovery" required><select name="mode"><option>Cash</option><option>UPI</option></select><button>Receive</button></form><table><tr><th>Customer</th><th>Due</th></tr>{% for c in customers %}<tr><td><a href="/customer/{{c.name}}">{{c.name}}</a></td><td>₹{{"%.2f"|format(c.due)}}</td></tr>{% endfor %}</table></section>
 <section><h2>🛒 Purchase / Expense</h2><form action="/purchase" method="post" class="panel"><input name="supplier" placeholder="Supplier"><select name="product">{% for p in products %}<option value="{{p.id}}">{{p.name}}</option>{% endfor %}</select><input name="qty" type="number" placeholder="Qty"><input name="rate" type="number" step=".01" placeholder="Purchase Rate"><select name="mode"><option>Cash</option><option>UPI</option><option>Supplier Udhar</option></select><button>Add Purchase</button></form><form action="/expense" method="post" class="panel"><input name="category" placeholder="Expense Category"><input name="amount" type="number" step=".01" placeholder="Amount"><select name="mode"><option>Cash</option><option>UPI</option></select><input name="note" placeholder="Reason"><button>Add Expense</button></form></section></div>
 <h2>🚨 Smart Udhar Priority Center</h2>
