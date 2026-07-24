@@ -2742,3 +2742,49 @@ body > main{
         height:54px;
     }
 }
+/* PRODUCT POS — HEADER POLISH */
+
+.gp-pos-header{
+    margin-bottom:20px;
+}
+
+.gp-pos-eyebrow{
+    color:#8c78ff;
+    font-size:11px;
+    font-weight:900;
+    letter-spacing:2px;
+    margin-bottom:9px;
+}
+
+.gp-pos-heading-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.gp-pos-heading-row::before{
+    content:"";
+    width:4px;
+    height:34px;
+    border-radius:10px;
+    background:linear-gradient(#7757ff,#25d8ff);
+    box-shadow:0 0 14px rgba(70,170,255,.35);
+}
+
+.gp-pos-title-icon{
+    font-size:27px;
+    line-height:1;
+}
+
+.gp-pos-heading-row h2{
+    margin:0;
+    font-size:31px;
+    font-weight:900;
+    letter-spacing:-.7px;
+}
+
+.gp-pos-header p{
+    margin:8px 0 0 48px;
+    color:#8f9ab8;
+    font-size:14px;
+}
