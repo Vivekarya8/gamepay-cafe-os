@@ -686,7 +686,205 @@ setInterval(
     </form>
 
 </section>
-<div class="twocol"><section><h2>👥 Udhar</h2>{% if session.role=="Owner" %}<form action="/customer" method="post" class="panel"><input name="name" placeholder="Name" required><input name="mobile" placeholder="Mobile"><input name="limit" type="number" placeholder="Credit Limit"><button>Approve Customer</button></form>{% endif %}<form action="/recovery" method="post" class="panel"><select name="name">{% for c in customers %}<option>{{c.name}}</option>{% endfor %}</select><input name="amount" type="number" step=".01" placeholder="Recovery" required><select name="mode"><option>Cash</option><option>UPI</option></select><button>Receive</button></form><table><tr><th>Customer</th><th>Due</th></tr>{% for c in customers %}<tr><td><a href="/customer/{{c.name}}">{{c.name}}</a></td><td>₹{{"%.2f"|format(c.due)}}</td></tr>{% endfor %}</table></section>
+<div class="twocol"><section class="gp-credit-center">
+
+    <div class="gp-credit-header">
+        <div class="gp-credit-eyebrow">
+            ◈ CREDIT CONTROL
+        </div>
+
+        <h2>👥 Udhar & Recovery</h2>
+
+        <p>
+            Manage customer credit, collect pending payments
+            and monitor outstanding balances.
+        </p>
+    </div>
+
+    {% if session.role=="Owner" %}
+
+    <div class="gp-credit-block">
+
+        <div class="gp-credit-block-head">
+            <div>
+                <small>NEW CREDIT CUSTOMER</small>
+                <h3>Approve Customer</h3>
+            </div>
+
+            <span class="gp-credit-icon">＋</span>
+        </div>
+
+        <form action="/customer"
+              method="post"
+              class="gp-credit-form">
+
+            <input
+                name="name"
+                placeholder="Customer Name"
+                required>
+
+            <input
+                name="mobile"
+                placeholder="Mobile Number">
+
+            <input
+                name="limit"
+                type="number"
+                placeholder="Credit Limit">
+
+            <button type="submit">
+                ✓ APPROVE CUSTOMER
+            </button>
+
+        </form>
+
+    </div>
+
+    {% endif %}
+
+
+    <div class="gp-credit-block">
+
+        <div class="gp-credit-block-head">
+
+            <div>
+                <small>PAYMENT COLLECTION</small>
+                <h3>Receive Recovery</h3>
+            </div>
+
+            <span class="gp-credit-icon">₹</span>
+
+        </div>
+
+        <form action="/recovery"
+              method="post"
+              class="gp-recovery-form">
+
+            <select name="name" required>
+
+                {% for c in customers %}
+
+                <option value="{{c.name}}">
+                    {{c.name}} · Due ₹{{"%.2f"|format(c.due)}}
+                </option>
+
+                {% endfor %}
+
+            </select>
+
+            <input
+                name="amount"
+                type="number"
+                step=".01"
+                placeholder="Recovery Amount"
+                required>
+
+            <select name="mode">
+                <option>Cash</option>
+                <option>UPI</option>
+            </select>
+
+            <button type="submit">
+                ₹ RECEIVE
+            </button>
+
+        </form>
+
+    </div>
+
+
+    <div class="gp-credit-list">
+
+        <div class="gp-credit-list-head">
+
+            <div>
+                <small>CUSTOMER ACCOUNTS</small>
+                <h3>Outstanding Credit</h3>
+            </div>
+
+            <span>
+                {{ customers|length }} Accounts
+            </span>
+
+        </div>
+
+        <div class="gp-credit-table-wrap">
+
+            <table class="gp-credit-table">
+
+                <thead>
+                    <tr>
+                        <th>CUSTOMER</th>
+                        <th>CURRENT DUE</th>
+                        <th>ACCOUNT</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for c in customers %}
+
+                    <tr>
+
+                        <td>
+                            <div class="gp-customer-name">
+                                <span>
+                                    {{ c.name[:1]|upper }}
+                                </span>
+
+                                <b>{{ c.name }}</b>
+                            </div>
+                        </td>
+
+                        <td>
+
+                            {% if c.due > 0 %}
+
+                                <strong class="gp-due-active">
+                                    ₹{{"%.2f"|format(c.due)}}
+                                </strong>
+
+                            {% else %}
+
+                                <strong class="gp-due-clear">
+                                    ₹0.00
+                                </strong>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+                            <a
+                                href="/customer/{{c.name}}"
+                                class="gp-ledger-btn">
+
+                                VIEW LEDGER →
+
+                            </a>
+                        </td>
+
+                    </tr>
+
+                    {% else %}
+
+                    <tr>
+                        <td colspan="3">
+                            No customers found.
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</section>
 <section><h2>🛒 Purchase / Expense</h2><form action="/purchase" method="post" class="panel"><input name="supplier" placeholder="Supplier"><select name="product">{% for p in products %}<option value="{{p.id}}">{{p.name}}</option>{% endfor %}</select><input name="qty" type="number" placeholder="Qty"><input name="rate" type="number" step=".01" placeholder="Purchase Rate"><select name="mode"><option>Cash</option><option>UPI</option><option>Supplier Udhar</option></select><button>Add Purchase</button></form><form action="/expense" method="post" class="panel"><input name="category" placeholder="Expense Category"><input name="amount" type="number" step=".01" placeholder="Amount"><select name="mode"><option>Cash</option><option>UPI</option></select><input name="note" placeholder="Reason"><button>Add Expense</button></form></section></div>
 <h2>🚨 Smart Udhar Priority Center</h2>
 
