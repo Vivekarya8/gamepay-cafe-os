@@ -2788,3 +2788,340 @@ body > main{
     color:#8f9ab8;
     font-size:14px;
 }
+/* =====================================================
+   GAMEPAY CAFE — CREDIT CONTROL CENTER
+   ===================================================== */
+
+.gp-credit-center{
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+}
+
+.gp-credit-header{
+    margin-bottom:2px;
+}
+
+.gp-credit-eyebrow{
+    margin-bottom:7px;
+    color:#8d7aff;
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:2px;
+}
+
+.gp-credit-header h2{
+    margin:0;
+    color:#f5f7ff;
+    font-size:27px;
+    font-weight:900;
+    letter-spacing:-.5px;
+}
+
+.gp-credit-header p{
+    max-width:520px;
+    margin:7px 0 0;
+    color:#7e8ba8;
+    font-size:12px;
+    line-height:1.6;
+}
+
+
+/* CREDIT BLOCKS */
+
+.gp-credit-block,
+.gp-credit-list{
+    overflow:hidden;
+    padding:18px;
+    border:1px solid #26395f;
+    border-radius:17px;
+
+    background:
+        radial-gradient(
+            circle at top right,
+            rgba(111,82,255,.10),
+            transparent 35%
+        ),
+        linear-gradient(
+            145deg,
+            rgba(17,29,55,.98),
+            rgba(10,20,40,.98)
+        );
+
+    box-shadow:0 15px 35px rgba(0,0,0,.16);
+}
+
+.gp-credit-block-head,
+.gp-credit-list-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:15px;
+}
+
+.gp-credit-block-head small,
+.gp-credit-list-head small{
+    display:block;
+    margin-bottom:4px;
+    color:#6f7c9b;
+    font-size:8px;
+    font-weight:900;
+    letter-spacing:1.5px;
+}
+
+.gp-credit-block-head h3,
+.gp-credit-list-head h3{
+    margin:0;
+    color:#f2f4ff;
+    font-size:17px;
+    font-weight:850;
+}
+
+.gp-credit-icon{
+    width:36px;
+    height:36px;
+    flex:0 0 36px;
+
+    display:grid;
+    place-items:center;
+
+    border:1px solid rgba(119,91,255,.25);
+    border-radius:10px;
+
+    background:rgba(112,83,255,.10);
+    color:#a99cff;
+
+    font-size:17px;
+    font-weight:900;
+}
+
+
+/* FORMS */
+
+.gp-credit-form,
+.gp-recovery-form{
+    display:grid;
+    gap:9px;
+}
+
+.gp-credit-form{
+    grid-template-columns:1fr 1fr 1fr;
+}
+
+.gp-credit-form button{
+    grid-column:1 / -1;
+}
+
+.gp-recovery-form{
+    grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) 110px;
+}
+
+.gp-recovery-form button{
+    grid-column:1 / -1;
+}
+
+.gp-credit-form input,
+.gp-recovery-form input,
+.gp-recovery-form select{
+    width:100%;
+    min-width:0;
+    height:44px;
+    margin:0;
+    padding:0 12px;
+
+    border:1px solid #2b4068;
+    border-radius:10px;
+
+    background:#071327;
+    color:#eef2ff;
+
+    outline:none;
+    font-size:12px;
+}
+
+.gp-credit-form input:focus,
+.gp-recovery-form input:focus,
+.gp-recovery-form select:focus{
+    border-color:#725cff;
+    box-shadow:0 0 0 3px rgba(114,92,255,.11);
+}
+
+.gp-credit-form button,
+.gp-recovery-form button{
+    width:100%;
+    min-height:43px;
+    margin:0;
+
+    border:0;
+    border-radius:10px;
+
+    background:linear-gradient(
+        135deg,
+        #7154f5,
+        #5537d5
+    );
+
+    color:white;
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:.6px;
+
+    cursor:pointer;
+}
+
+
+/* CUSTOMER LIST */
+
+.gp-credit-list-head > span{
+    padding:6px 9px;
+
+    border:1px solid rgba(113,91,220,.18);
+    border-radius:20px;
+
+    background:rgba(112,83,255,.07);
+    color:#9186cf;
+
+    font-size:8px;
+    font-weight:800;
+}
+
+.gp-credit-table-wrap{
+    overflow-x:auto;
+    border:1px solid rgba(53,72,113,.45);
+    border-radius:11px;
+}
+
+.gp-credit-table{
+    width:100%;
+    min-width:480px;
+    background:transparent;
+}
+
+.gp-credit-table th{
+    padding:10px 12px;
+
+    background:rgba(6,14,30,.40);
+    color:#657391;
+
+    font-size:8px;
+    font-weight:900;
+    letter-spacing:1.1px;
+}
+
+.gp-credit-table td{
+    padding:11px 12px;
+    border-bottom:1px solid rgba(45,61,99,.55);
+    font-size:11px;
+}
+
+.gp-credit-table tbody tr:last-child td{
+    border-bottom:0;
+}
+
+.gp-credit-table tbody tr:hover{
+    background:rgba(111,83,255,.035);
+}
+
+
+/* CUSTOMER AVATAR */
+
+.gp-customer-name{
+    display:flex;
+    align-items:center;
+    gap:9px;
+}
+
+.gp-customer-name > span{
+    width:29px;
+    height:29px;
+    flex:0 0 29px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:9px;
+
+    background:rgba(108,82,238,.12);
+    border:1px solid rgba(108,82,238,.18);
+
+    color:#a99cff;
+    font-size:10px;
+    font-weight:900;
+}
+
+.gp-customer-name b{
+    color:#e9edff;
+}
+
+
+/* DUE STATUS */
+
+.gp-due-active{
+    color:#ff8e9e;
+    font-size:12px;
+}
+
+.gp-due-clear{
+    color:#49dfaa;
+    font-size:12px;
+}
+
+
+/* LEDGER */
+
+.gp-ledger-btn{
+    display:inline-flex;
+    align-items:center;
+
+    padding:6px 9px;
+
+    border:1px solid rgba(111,87,224,.24);
+    border-radius:8px;
+
+    background:rgba(107,80,232,.07);
+    color:#a99cff;
+
+    text-decoration:none;
+    font-size:8px;
+    font-weight:900;
+    letter-spacing:.4px;
+}
+
+.gp-ledger-btn:hover{
+    background:rgba(107,80,232,.14);
+}
+
+
+/* RESPONSIVE */
+
+@media(max-width:900px){
+
+    .gp-credit-form{
+        grid-template-columns:1fr;
+    }
+
+    .gp-credit-form button{
+        grid-column:auto;
+    }
+
+    .gp-recovery-form{
+        grid-template-columns:1fr;
+    }
+
+    .gp-recovery-form button{
+        grid-column:auto;
+    }
+}
+
+@media(max-width:600px){
+
+    .gp-credit-block,
+    .gp-credit-list{
+        padding:14px;
+    }
+
+    .gp-credit-header h2{
+        font-size:23px;
+    }
+}
