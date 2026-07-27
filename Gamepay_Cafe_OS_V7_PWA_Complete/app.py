@@ -301,8 +301,8 @@ GROUP BY detail
 ORDER BY cnt DESC
 LIMIT 1
 """).fetchone()
-    c.close()
-    return render_template("dashboard.html",total=total,cost=cost,exp=exp,profit=total-cost-exp,due=due,products=products,customers=customers,stations=stations,recent=recent,bd=bd,running=running,movements=movements,suppliers=suppliers,supplier_paid=supplier_paid,daily=daily,opening_cash=opening_cash,cash_sales=cash_sales,cash_recovery=cash_recovery,cash_expenses=cash_expenses,cash_purchases=cash_purchases,cash_supplier_payments=cash_supplier_payments,cash_added=cash_added,cash_withdrawn=cash_withdrawn,expected_cash=expected_cash,gaming_sales=gaming_sales,product_sales=product_sales,total_transactions=total_transactions,avg_bill=avg_bill,top_product=top_product,top_station=top_station)
+c.close()
+return render_template("dashboard.html",total=total,cost=cost,exp=exp,profit=total-cost-exp,due=due,products=products,customers=customers,stations=stations,recent=recent,bd=bd,running=running,movements=movements,suppliers=suppliers,supplier_paid=supplier_paid,daily=daily,opening_cash=opening_cash,cash_sales=cash_sales,cash_recovery=cash_recovery,cash_expenses=cash_expenses,cash_purchases=cash_purchases,cash_supplier_payments=cash_supplier_payments,cash_added=cash_added,cash_withdrawn=cash_withdrawn,expected_cash=expected_cash,gaming_sales=gaming_sales,product_sales=product_sales,total_transactions=total_transactions,avg_bill=avg_bill,top_product=top_product,top_station=top_station)
 @app.post("/open-day")
 def open_day():
     if not logged():return redirect("/")
