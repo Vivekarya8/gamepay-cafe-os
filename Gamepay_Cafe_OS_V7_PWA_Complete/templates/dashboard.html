@@ -208,7 +208,83 @@
 
 </section>
 {% if not bd or bd.closed %}<form action="/open-day" method="post" class="panel row"><input name="opening" type="number" step=".01" placeholder="Opening Cash" required><button>OPEN DAY</button></form>{% else %}<div class="notice">🟢 DAY OPEN · Opening Cash ₹{{"%.2f"|format(bd.opening_cash)}}</div>{% endif %}
-<div class="metrics"><div><small>Today Sales</small><b>₹{{"%.2f"|format(total)}}</b></div><div><small>COGS</small><b>₹{{"%.2f"|format(cost)}}</b></div><div><small>Expenses</small><b>₹{{"%.2f"|format(exp)}}</b></div><div><small>Est. Net Profit</small><b>₹{{"%.2f"|format(profit)}}</b></div><div><small>Total Udhar</small><b>₹{{"%.2f"|format(due)}}</b></div></div>
+<div class="metrics">
+<section class="gp-business-insights">
+
+    <h2>📊 Business Analytics</h2>
+
+    <div class="gp-hero-stats">
+
+        <div class="gp-mini-card">
+            <span>🎮</span>
+            <div>
+                <small>Gaming Revenue</small>
+                <b>₹{{ "%.2f"|format(gaming_sales) }}</b>
+            </div>
+        </div>
+
+        <div class="gp-mini-card">
+            <span>☕</span>
+            <div>
+                <small>Café Revenue</small>
+                <b>₹{{ "%.2f"|format(product_sales) }}</b>
+            </div>
+        </div>
+
+        <div class="gp-mini-card">
+            <span>🧾</span>
+            <div>
+                <small>Total Bills</small>
+                <b>{{ total_transactions }}</b>
+            </div>
+        </div>
+
+        <div class="gp-mini-card">
+            <span>💳</span>
+            <div>
+                <small>Average Bill</small>
+                <b>₹{{ "%.2f"|format(avg_bill) }}</b>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="gp-owner-summary">
+
+        <h3>🤖 AI Business Insights</h3>
+
+        <ul>
+
+            <li>
+                <span>🏆 Top Product</span>
+                <strong>
+                    {{ top_product.detail if top_product else "N/A" }}
+                </strong>
+            </li>
+
+            <li>
+                <span>🎮 Most Played Station</span>
+                <strong>
+                    {{ top_station.detail if top_station else "N/A" }}
+                </strong>
+            </li>
+
+            <li>
+                <span>💰 Gaming Revenue</span>
+                <strong>₹{{ "%.2f"|format(gaming_sales) }}</strong>
+            </li>
+
+            <li>
+                <span>☕ Café Revenue</span>
+                <strong>₹{{ "%.2f"|format(product_sales) }}</strong>
+            </li>
+
+        </ul>
+
+    </div>
+
+</section>
+<div><small>Today Sales</small><b>₹{{"%.2f"|format(total)}}</b></div><div><small>COGS</small><b>₹{{"%.2f"|format(cost)}}</b></div><div><small>Expenses</small><b>₹{{"%.2f"|format(exp)}}</b></div><div><small>Est. Net Profit</small><b>₹{{"%.2f"|format(profit)}}</b></div><div><small>Total Udhar</small><b>₹{{"%.2f"|format(due)}}</b></div></div>
 <!-- =====================================================
      GAMEPAY CAFE — LIVE GAMING ARENA
      ===================================================== -->
