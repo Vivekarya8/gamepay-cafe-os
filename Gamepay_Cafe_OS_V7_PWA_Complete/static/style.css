@@ -2834,7 +2834,46 @@ body > main{
     flex:1;
     min-width:300px;
 }
+<div class="gp-management-tools">
 
+    <span class="gp-tools-label">
+        OWNER QUICK TOOLS
+    </span>
+
+    <div class="gp-tool-actions">
+
+        <a href="/excel" class="gp-tool-btn">
+            <span>📊</span>
+            <div>
+                <small>REPORT</small>
+                <b>Excel</b>
+            </div>
+        </a>
+
+        <a href="/backup-db" class="gp-tool-btn">
+            <span>💾</span>
+            <div>
+                <small>DATABASE</small>
+                <b>Backup</b>
+            </div>
+        </a>
+
+    </div>
+
+    <div class="gp-owner-summary">
+
+        <h3>📋 Today's Summary</h3>
+
+        <ul>
+            <li><span>Sales</span><strong>₹{{ "%.2f"|format(total) }}</strong></li>
+            <li><span>Profit</span><strong>₹{{ "%.2f"|format(profit) }}</strong></li>
+            <li><span>Due</span><strong>₹{{ "%.2f"|format(due) }}</strong></li>
+            <li><span>Live Sessions</span><strong>{{ running|length }}</strong></li>
+        </ul>
+
+    </div>
+
+</div>
 .gp-hero-stats{
     display:grid;
     grid-template-columns:repeat(2,minmax(170px,1fr));
