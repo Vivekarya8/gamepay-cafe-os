@@ -150,7 +150,63 @@
 <!-- =====================================================
      GAMEPAY CAFE — DASHBOARD HERO
      ===================================================== -->
+<section class="gp-dashboard-hero">
 
+    <div class="gp-hero-left">
+
+        <div class="gp-eyebrow">◈ GAMEPAY CAFE OS</div>
+
+        <h1>
+            {% if session.name %}
+                Welcome back, {{ session.name }} 👋
+            {% else %}
+                Welcome to Gamepay Cafe 👋
+            {% endif %}
+        </h1>
+
+        <p>
+            Monitor your gaming floor, café sales, profit, inventory and customer recovery from one intelligent dashboard.
+        </p>
+
+        <div class="gp-hero-stats">
+
+            <div class="gp-mini-card">
+                <span>💰</span>
+                <div>
+                    <small>Today's Sales</small>
+                    <b>₹{{ "%.2f"|format(total) }}</b>
+                </div>
+            </div>
+
+            <div class="gp-mini-card">
+                <span>📈</span>
+                <div>
+                    <small>Today's Profit</small>
+                    <b>₹{{ "%.2f"|format(profit) }}</b>
+                </div>
+            </div>
+
+            <div class="gp-mini-card">
+                <span>🎮</span>
+                <div>
+                    <small>Active Sessions</small>
+                    <b>{{ running|length }}</b>
+                </div>
+            </div>
+
+            <div class="gp-mini-card">
+                <span>💳</span>
+                <div>
+                    <small>Pending Recovery</small>
+                    <b>₹{{ "%.2f"|format(due) }}</b>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
 {% if not bd or bd.closed %}<form action="/open-day" method="post" class="panel row"><input name="opening" type="number" step=".01" placeholder="Opening Cash" required><button>OPEN DAY</button></form>{% else %}<div class="notice">🟢 DAY OPEN · Opening Cash ₹{{"%.2f"|format(bd.opening_cash)}}</div>{% endif %}
 <div class="metrics"><div><small>Today Sales</small><b>₹{{"%.2f"|format(total)}}</b></div><div><small>COGS</small><b>₹{{"%.2f"|format(cost)}}</b></div><div><small>Expenses</small><b>₹{{"%.2f"|format(exp)}}</b></div><div><small>Est. Net Profit</small><b>₹{{"%.2f"|format(profit)}}</b></div><div><small>Total Udhar</small><b>₹{{"%.2f"|format(due)}}</b></div></div>
 <!-- =====================================================
