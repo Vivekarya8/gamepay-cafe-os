@@ -260,7 +260,7 @@ def dashboard():
     AND type='Gaming'
     """).fetchone()["s"]
     
-   product_sales = c.execute("""
+    product_sales = c.execute("""
     SELECT COALESCE(SUM(amount),0) s
     FROM transactions
     WHERE status='ACTIVE'
