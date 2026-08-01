@@ -254,25 +254,25 @@ def dashboard():
     # -----------------------------
     
     gaming_sales = c.execute("""
-    SELECT COALESCE(SUM(amount),0)
+    SELECT COALESCE(SUM(amount),0) s
     FROM transactions
     WHERE status='ACTIVE'
     AND type='Gaming'
-    """).fetchone()[0]
+    """).fetchone()["s"]
     
-    product_sales = c.execute("""
-    SELECT COALESCE(SUM(amount),0)
+   product_sales = c.execute("""
+    SELECT COALESCE(SUM(amount),0) s
     FROM transactions
     WHERE status='ACTIVE'
     AND type='Product'
-    """).fetchone()[0]
+    """).fetchone()["s"]
     
     total_transactions = c.execute("""
-    SELECT COUNT(*)
+    SELECT COUNT(*) c
     FROM transactions
     WHERE status='ACTIVE'
     AND type IN ('Gaming','Product')
-    """).fetchone()[0]
+    """).fetchone()["c"]
     
     avg_bill = round(
         (gaming_sales + product_sales) /
