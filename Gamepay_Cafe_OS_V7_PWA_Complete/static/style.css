@@ -3434,3 +3434,46 @@ body > main{
     }
 
 }
+
+.gp-business-grid{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(220px,1fr));
+    gap:18px;
+    margin-top:20px;
+}
+
+.gp-business-card{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:18px;
+    border-radius:16px;
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.08);
+}
+
+.gp-business-card span{
+    width:52px;
+    height:52px;
+    display:grid;
+    place-items:center;
+    border-radius:14px;
+    font-size:24px;
+    background:rgba(125,98,255,.15);
+}
+
+.gp-business-card small{
+    display:block;
+    color:#9aa6c3;
+    font-size:12px;
+}
+
+.gp-business-card b{
+    display:block;
+    margin-top:4px;
+    color:#fff;
+    font-size:28px;
+}
+
+
+
